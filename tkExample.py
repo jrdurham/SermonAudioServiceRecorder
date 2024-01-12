@@ -23,7 +23,7 @@ class App(customtkinter.CTk):
         self.sidebar_frame = customtkinter.CTkFrame(self, width=140, corner_radius=0)
         self.sidebar_frame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebar_frame.grid_rowconfigure(4, weight=1)
-        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="SermonAudio\nRecorder", font=customtkinter.CTkFont(size=20, weight="bold"))
+        self.logo_label = customtkinter.CTkLabel(self.sidebar_frame, text="Service Recorder", font=customtkinter.CTkFont(size=20, weight="bold"))
         self.logo_label.grid(row=0, column=0, padx=20, pady=(20, 10))
         self.sidebar_button_1 = customtkinter.CTkButton(self.sidebar_frame, text="Begin Recording", command=self.recording)
         self.sidebar_button_1.grid(row=1, column=0, padx=20, pady=10)
@@ -164,7 +164,6 @@ class App(customtkinter.CTk):
 
     def notRecording(self):
         print("End Record")
-        print(f"{self.sidebar_button_1.cget("fg_color")}")
         self.sidebar_button_1.configure(text="Begin Recording", fg_color=('#3B8ED0', '#1F6AA5'), hover_color=("#36719F", "#144870"), command=self.recording)
 
 
