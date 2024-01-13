@@ -1,3 +1,4 @@
+import os
 import requests
 import logging
 from dotenv import load_dotenv
@@ -47,7 +48,7 @@ def uploadSermon(filePath, sermonId, uploadType="original"):
 
     data = {
         "uploadType": uploadType,
-        "sermonID": sermonID
+        "sermonID": sermonId
     }
 
     try:
