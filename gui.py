@@ -2,6 +2,7 @@ import os
 import tkinter
 import tkinter.messagebox
 import customtkinter
+import saapi
 from PIL import Image, ImageTk
 from datetime import datetime
 from audioRecorder import AudioRecorder as ar
@@ -93,10 +94,11 @@ class saRecorder(customtkinter.CTk):
         self.frameLabel.grid(row=0, column=0, padx=20, pady=(5,0), sticky="new", columnspan=2)
         self.seriesLabel = customtkinter.CTkLabel(self.optTagsFrame,  text="Series Title:")
         self.seriesLabel.grid(row=1, column=0, padx=(10,0), pady=(20,20), sticky="w")
-        self.seriesField = customtkinter.CTkEntry(self.optTagsFrame,  placeholder_text="Example: Unspeakable Gifts", width=290)
+        self.seriesField = customtkinter.CTkComboBox(self.optTagsFrame, width=290, values=saapi.getAllSeries())
+        self.seriesField.set("")
         self.seriesField.grid(row=1, column=1, padx=20, pady=(20,20), sticky="nse")
 
-        #Functions
+    #Functions
     def recording(self):
         print("Recording started.")
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
@@ -110,7 +112,15 @@ class saRecorder(customtkinter.CTk):
             if str(self.deCheck.get()) == "off":
                 self.fileName = f"{self.manualDate.get()}-{self.manualEvent.get()}_{self.timeStamp()}"
             self.recorder.is_recording = False
-            self.recorder.output_filename = self.fileName             
+            self.recorder.output_filename = self.fileName
+            self.recorder.title = f"{self.sermonField.get()}"
+            self.recorder.artist = f"{self.speakerField.get()}"
+            self.recorder.album = f"{self.refField.get()}"
+            self.recorder.comments = f"{self.seriesField.get()}"       
+            print(f"Title: {self.recorder.title}")
+            print(f"Speaker: {self.recorder.artist}") 
+            print(f"Ref: {self.recorder.album}") 
+            print(f"Series: {self.recorder.comments}")       
             self.recordButton.configure(text="Begin Recording", fg_color=('#3B8ED0', '#1F6AA5'), hover_color=("#36719F", "#144870"), command=self.recording)
 
     def userSetDateEvent(self):
@@ -135,6 +145,9 @@ class saRecorder(customtkinter.CTk):
     
     def timeStamp(self):
          return datetime.now().timestamp()
+    
+    def checkSeries(self):
+         pass
 
 if __name__ == "__main__":
     sar = saRecorder()

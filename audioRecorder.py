@@ -4,10 +4,16 @@ import numpy as np
 import wave
 from threading import Thread
 from pydub import AudioSegment
+import shutil
+import filecmp
 
 class AudioRecorder:
-    def __init__(self, output_filename=None):
+    def __init__(self, output_filename="", title="", artist="", album="", comments=""):
         self.output_filename = output_filename
+        self.title = title
+        self.artist = artist
+        self.album = album
+        self.comments = comments
         self.is_recording = False
     def recordAudio(self):
             chunk = 1024
@@ -54,11 +60,17 @@ class AudioRecorder:
             wf.writeframes(frames_scaled.astype(np.int32).tobytes())
 
         audio = AudioSegment.from_wav("temp.wav")
-        audio.export(f"{self.output_filename}.mp3", format="mp3")
+
+        fade_in_duration = 5000  # in milliseconds
+        fade_out_duration = 5000  # in milliseconds
+        audio = audio.fade_in(fade_in_duration).fade_out(fade_out_duration)
+
+        outFile=f"{os.getenv('AUDIO_DIR')}{self.output_filename}.mp3"
+
+        audio.export(f"{outFile}", format="mp3", tags={
+            'title': f"{self.title}",
+            'artist': f"{self.artist}",
+            'album': f"{self.album}",
+            'comment': f"{self.comments}"
+        })
         os.remove("temp.wav")
-
-
-
-#This is how it handles the thread
-#self.audio_thread = Thread(target=self.record_audio)
-#self.audio_thread.start()
