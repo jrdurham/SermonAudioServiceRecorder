@@ -1,0 +1,6 @@
+customtkinter==5.2.2
+numpy==1.26.3
+PyAudio==0.2.14
+python-dotenv==1.0.0
+sermonaudio==6.14.3
+sounddevice==0.4.6
