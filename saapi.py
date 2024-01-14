@@ -1,6 +1,6 @@
 import os
 import requests
-import logging
+import json
 from dotenv import load_dotenv
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
@@ -32,40 +32,3 @@ def getAllSeries():
             break  # Stop if there's an error
 
     return titles
-
-def createSermon():
-    pass
-
-
-def uploadSermon(filePath, sermonId, uploadType="original"):
-    url = "https://api.sermonaudio.com/v2/media"
-    
-    headers = {
-        "accept": "application/json",
-        "X-Site-Auth-Username": SA_API_KEY,
-        "Content-Type": "application/json"
-    }
-
-    data = {
-        "uploadType": uploadType,
-        "sermonID": sermonId
-    }
-
-    try:
-        with open(filePath, "rb") as file:
-            files = {"file": file}
-            response = requests.post(url, headers=headers, data=data, files=files)
-
-            if response.status_code == 200:
-                successData = response.json
-                return successData
-                print("File uploaded successfully.")
-            else:
-                print(f"Error: {response.status_code}")
-                print(response.text)
-    except Exception as e:
-        print(f"Error: {e}")
-
-if __name__ == "__main__":
-    all_titles = getAllSeries()
-    print(all_titles)

@@ -4,16 +4,18 @@ import tkinter.messagebox
 import customtkinter
 import saapi
 from PIL import Image, ImageTk
+import time
 from datetime import datetime
-from audioRecorder import AudioRecorder as ar
+from saAudioEngine import AudioHandler as ah
+import threading
 from threading import Thread
 from dotenv import load_dotenv
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASEDIR, '.env'))
 
-customtkinter.set_appearance_mode("System")  # Modes: "System" (standard), "Dark", "Light"
-customtkinter.set_default_color_theme("blue")  # Themes: "blue" (standard), "green", "dark-blue"
+customtkinter.set_appearance_mode("System")
+customtkinter.set_default_color_theme("blue")
 logoImg = customtkinter.CTkImage(light_image=None,dark_image=Image.open(os.getenv('GUI_LOGO')), size=(160,35))
 dateNow = datetime.now()
 fullDateStamp = datetime.today().strftime('%Y%m%d')
@@ -23,9 +25,10 @@ class saRecorder(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
-        self.recorder = ar()
+        self.engine = ah()
         self.deCheck = customtkinter.StringVar(value="on")
         self.fileName = "init"
+        self.sermon_id = None
 
         # configure window
         self.title("Service Recorder")
@@ -102,8 +105,8 @@ class saRecorder(customtkinter.CTk):
     def recording(self):
         print("Recording started.")
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
-        self.recorder.is_recording = True
-        Thread(target=self.recorder.recordAudio).start()
+        self.engine.is_recording = True
+        Thread(target=self.engine.recordAudio).start()
         self.recordButton.configure(text="End Recording", fg_color="dark red", hover_color="#590000", command=self.notRecording)
         
 
@@ -111,18 +114,21 @@ class saRecorder(customtkinter.CTk):
             print("Recording ended.")
             if str(self.deCheck.get()) == "off":
                 self.fileName = f"{self.manualDate.get()}-{self.manualEvent.get()}_{self.timeStamp()}"
-            self.recorder.is_recording = False
-            self.recorder.output_filename = self.fileName
-            self.recorder.title = f"{self.sermonField.get()}"
-            self.recorder.artist = f"{self.speakerField.get()}"
-            self.recorder.album = f"{self.refField.get()}"
-            self.recorder.comments = f"{self.seriesField.get()}"       
-            print(f"Title: {self.recorder.title}")
-            print(f"Speaker: {self.recorder.artist}") 
-            print(f"Ref: {self.recorder.album}") 
-            print(f"Series: {self.recorder.comments}")       
-            self.recordButton.configure(text="Begin Recording", fg_color=('#3B8ED0', '#1F6AA5'), hover_color=("#36719F", "#144870"), command=self.recording)
-
+            self.engine.fileName = f"{self.fileName}"
+            self.engine.is_recording = False
+            self.engine.fullTitle = f"{self.sermonField.get()}"
+            self.engine.speakerName = f"{self.speakerField.get()}"
+            self.engine.bibleText = f"{self.refField.get()}"
+            self.engine.series = f"{self.seriesField.get()}"
+            self.engine.publishTimestamp = (int(time.time()) + 300)
+            self.engine.preachDate = self.manualDate.get() if str(self.deCheck.get()) == "off" else fullDateStamp
+            self.engine.eventType = f"{self.manualEvent.get()}"
+            if self.saUpload.get():
+                self.engine.saUpload = 1
+            else:
+                 self.engine.saUpload = 0       
+            self.recordButton.configure(text="Begin Recording", fg_color=('#3B8ED0', '#1F6AA5'), hover_color=("#36719F", "#144870"), command=self.recording)       
+          
     def userSetDateEvent(self):
             self.manualEvent.configure(state="normal" if str(self.deCheck.get()) == "off" else "disabled")
             self.manualDate.configure(state="normal" if str(self.deCheck.get()) == "off" else "disabled")
