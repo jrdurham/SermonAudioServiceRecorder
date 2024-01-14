@@ -106,7 +106,7 @@ class saRecorder(customtkinter.CTk):
         print("Recording started.")
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
         self.engine.is_recording = True
-        Thread(target=self.engine.newRecordAudio).start()
+        Thread(target=self.engine.recordAudio).start()
         self.recordButton.configure(text="End Recording", fg_color="dark red", hover_color="#590000", command=self.notRecording)
         
 
@@ -124,12 +124,7 @@ class saRecorder(customtkinter.CTk):
             self.engine.publishTimestamp = (int(time.time()) + 300)
             self.engine.preachDate = self.manualDate.get() if str(self.deCheck.get()) == "off" else fullDateStamp
             self.engine.eventType = f"{self.manualEvent.get()}"
-            self.engine.newSaveAudio()
-            #if self.saUpload.get():
-            #    self.engine.saUpload = 1
-            #    self.engine.createSermon()
-            #else:
-            #     self.engine.saUpload = 0     
+            self.engine.saUpload = f"{self.saUpload.get()}"
           
     def userSetDateEvent(self):
             self.manualEvent.configure(state="normal" if str(self.deCheck.get()) == "off" else "disabled")

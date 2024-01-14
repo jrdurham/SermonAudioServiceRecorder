@@ -11,10 +11,17 @@ import json
 import tempfile
 import queue
 import sys
+import time
 from requests import Session
 from threading import Thread
 from pydub import AudioSegment
 from dotenv import load_dotenv
+
+import logging
+l = logging.getLogger("pydub.converter")
+l.setLevel(logging.ERROR)
+l.addHandler(logging.StreamHandler())
+
 
 _session = Session()
 
@@ -37,115 +44,33 @@ class AudioHandler:
         self.eventType = eventType
         self.bibleText = bibleText
         self.series = series
-    def recordAudio(self):
-            chunk = 1024
-            sample_format = np.float32
-
-            device_info = sd.query_devices()
-
-            i=0
-            for hostApi in sd.query_hostapis():
-                if "WASAPI" in hostApi["name"]:
-                    api=i
-                    break
-                i = i+1
-
-            for hostDev in sd.query_devices():
-                #print(f"Dev ID: {hostDev['index']}\nDev Name: {hostDev['name']}\nHost API: {hostDev['hostapi']}")
-                if hostDev['hostapi'] == api and "Onyx" in hostDev['name']:
-                    dev= hostDev['index']
-                    self.dev = dev
-
-
-            # Use the default input device
-            device_info = sd.query_devices(device=dev)
-            channels = device_info['max_input_channels']
-            fs = device_info['default_samplerate']
-            self.fs = fs
-
-            print(f"Device Name: {device_info['name']}\nChannels: {channels}\nSample Rate: {fs}")
-
-            frames = []
-
-            with sd.InputStream(channels=channels, samplerate=fs, dtype=sample_format) as stream:
-                while self.is_recording:
-                    data, overflowed = stream.read(chunk)
-                    frames.append(data)
-
-            self.saveAudio(np.concatenate(frames))
-
-    def saveAudio(self, frames):
-        frames_scaled = frames * (2**31 - 1)  # Scale the frames to fit within the valid range
-
-        with wave.open("temp.wav", 'wb') as wf:
-            wf.setnchannels(1)
-            wf.setsampwidth(np.dtype(np.int32).itemsize)  # Use int32 for scaled frames
-            wf.setframerate(44100)
-            wf.writeframes(frames_scaled.astype(np.int32).tobytes())
-
-        audio = AudioSegment.from_wav("temp.wav")
-
-        fade_in_duration = 5000  # in milliseconds
-        fade_out_duration = 5000  # in milliseconds
-        audio = audio.fade_in(fade_in_duration).fade_out(fade_out_duration)
-
-        outFile=f"{os.getenv('AUDIO_DIR')}{self.fileName}.mp3"
-        self.outFile = outFile
-        audio.export(f"{outFile}", format="mp3", tags={
-            'title': f"{self.fullTitle}",
-            'artist': f"{self.speakerName}",
-            'album': f"{self.bibleText}",
-            'comment': f"{self.series}"
-        })
-        os.remove("temp.wav")
-        #if self.saUpload:
-        #    self.createSermon()
-
     def recCallback(self, indata, frames, time, status):
         if status:
             print(status, file=sys.stderr)
         q.put(indata.copy())
 
-    def newRecordAudio(self):
-
-        device_info = sd.query_devices()
-
-        i=0
-        for hostApi in sd.query_hostapis():
-            if "WASAPI" in hostApi["name"]:
-                api=i
-                break
-            i = i+1
-
-        for hostDev in sd.query_devices():
-            #print(f"Dev ID: {hostDev['index']}\nDev Name: {hostDev['name']}\nHost API: {hostDev['hostapi']}")
-            if hostDev['hostapi'] == api and "Onyx" in hostDev['name']:
-                dev= hostDev['index']
-                self.dev = dev
-
-
-        # Use the default input device
-        device_info = sd.query_devices(device=dev)
+    def recordAudio(self):
+        device_info = sd.query_devices(kind="input")
+        dev = device_info['index']
         channels = device_info['max_input_channels']
-        fs = device_info['default_samplerate']
-        self.fs = fs
-
+        fs = int(device_info['default_samplerate'])
         print(f"Device Name: {device_info['name']}\nChannels: {channels}\nSample Rate: {fs}")
-
         try:
             tmpFile = tempfile.mktemp(prefix='delme_rec_unlimited_',
                                             suffix='.wav', dir='')
             self.tmpFile = tmpFile
-            with sf.SoundFile(tmpFile, mode='x', samplerate=int(self.fs),
-                            channels=1) as file:
-                with sd.InputStream(samplerate=self.fs, device=self.dev,
-                                    channels=1, callback=self.recCallback):
+            with sf.SoundFile(tmpFile, mode='x', samplerate=fs,
+                            channels=channels) as file:
+                with sd.InputStream(samplerate=fs, device=dev,
+                                    channels=channels, callback=self.recCallback):
                     while self.is_recording:
                         file.write(q.get())
         except KeyboardInterrupt:
             print('\nRecording finished: ' + repr(tmpFile))
+        finally:
+            self.saveAudio()
         
-    def newSaveAudio(self):
+    def saveAudio(self):
         audio = AudioSegment.from_wav(f"{self.tmpFile}")
 
         fade_in_duration = 5000  # in milliseconds
@@ -160,6 +85,8 @@ class AudioHandler:
             'comment': f"{self.series}"
         })
         os.remove(f"{self.tmpFile}")
+        if self.saUpload:
+            self.createSermon()
 
     def createSermon(self):
         # Print variables before making the API call
@@ -221,8 +148,8 @@ class AudioHandler:
 
         data = {
             "uploadType": "original",
-            "sermonID": f"{self.sermonId}"
-            #"originalFilename": f"{self.fileName}"
+            "sermonID": f"{self.sermonId}",
+            "originalFilename": f"{self.fileName}"
         }
 
         try:
