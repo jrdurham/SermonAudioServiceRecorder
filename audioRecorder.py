@@ -6,15 +6,18 @@ from threading import Thread
 from pydub import AudioSegment
 import shutil
 import filecmp
+from saapi import uploadSermon
 
 class AudioRecorder:
-    def __init__(self, output_filename="", title="", artist="", album="", comments=""):
+    def __init__(self, output_filename="", title="", artist="", album="", comments="", saUpload=None):
         self.output_filename = output_filename
         self.title = title
         self.artist = artist
         self.album = album
         self.comments = comments
         self.is_recording = False
+        self.upload_callback = None
+        self.saUpload = saUpload
     def recordAudio(self):
             chunk = 1024
             sample_format = np.float32
@@ -74,3 +77,13 @@ class AudioRecorder:
             'comment': f"{self.comments}"
         })
         os.remove("temp.wav")
+        self.export_callback()
+    
+    def export_callback(self):
+        print("Export completed.")
+        # Check if self.saUpload is True before calling uploadSermon
+        if self.upload_callback and self.saUpload:
+            self.upload_callback()
+
+    def set_upload_callback(self, callback):
+        self.upload_callback = callback
