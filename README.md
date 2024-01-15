@@ -8,7 +8,7 @@ A GUI that records audio and uploads it to SermonAudio with the selected paramet
 1. From the repo's directory, run `pip install -r requirements.txt`.  
 
 ## Configuration
-1. Create a text file named `.env` in the root of the repo's directory, and fill it with the following values, replacing `<value>` for each with the appropriate information:
+Create a text file named `.env` in the root of the repo's directory, and fill it with the following values, replacing `<value>` for each with the appropriate information:
    2. `SA_API_KEY=<value>`
       3. This is your SermonAudio API key. It's available in the Member Area.
    3. `GUI_Logo=<value>`
