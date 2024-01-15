@@ -173,3 +173,6 @@ cython_debug/
 .ico
 .svg
 img/*
+
+#SR Config
+config*.json
