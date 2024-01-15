@@ -1,18 +1,19 @@
 import os
-
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
-
-assert np
+import saapi
 import requests
 import json
 import tempfile
 import queue
 import sys
 from requests import Session
+from datetime import datetime
 from pydub import AudioSegment
 from dotenv import load_dotenv
+
+assert np
 
 import logging
 
@@ -30,6 +31,9 @@ SA_API_KEY = os.getenv("SA_API_KEY")
 
 q = queue.Queue()
 
+
+def message(message):
+    print(f"[saAudioEngine] {message}")
 
 class AudioHandler:
     def __init__(
@@ -61,16 +65,17 @@ class AudioHandler:
         q.put(indata.copy())
 
     def recordAudio(self):
+        message("Initializing Audio Engine...")
         device_info = sd.query_devices(kind="input")
         dev = device_info["index"]
         channels = device_info["max_input_channels"]
         fs = int(device_info["default_samplerate"])
-        print(
-            f"Device Name: {device_info['name']}\nChannels: {channels}\nSample Rate: {fs}"
+        message(
+            f"Audio Device Information:\n\n  Device Name: {device_info['name']}\n  Channels: {channels}\n  Sample Rate: {fs}\n"
         )
         try:
             tmpFile = tempfile.mktemp(
-                prefix="delme_rec_unlimited_", suffix=".wav", dir=""
+                prefix="temp_saae", suffix=".wav", dir=""
             )
             self.tmpFile = tmpFile
             with sf.SoundFile(
@@ -82,14 +87,17 @@ class AudioHandler:
                     channels=channels,
                     callback=self.recCallback,
                 ):
+                    message("Recording audio.")
                     while self.is_recording:
                         file.write(q.get())
         except KeyboardInterrupt:
-            print("\nRecording finished: " + repr(tmpFile))
+            message("Recording finished: " + repr(tmpFile))
         finally:
             self.saveAudio()
+            message("Ready to record.")
 
     def saveAudio(self):
+        message("Recording stopped. Beginning file export.")
         audio = AudioSegment.from_wav(f"{self.tmpFile}")
 
         fade_in_duration = 5000  # in milliseconds
@@ -107,102 +115,28 @@ class AudioHandler:
                 "comment": f"{self.series}",
             },
         )
+        message(f"Audio File: {outFile}")
         os.remove(f"{self.tmpFile}")
         if self.saUpload:
-            self.createSermon()
+            message("Sermon Marked for SermonAudio upload, beginning process.")
+            sermonid = saapi.create_sermon(
+                self.fullTitle,
+                self.speakerName,
+                self.publishTimestamp,
+                self.preachDate,
+                self.eventType,
+                self.bibleText,
+            )
 
-    def createSermon(self):
-        # Print variables before making the API call
-        print("Variables passed to createSermon:")
-        print(f"fullTitle: {self.fullTitle}")
-        print(f"speakerName: {self.speakerName}")
-        print(f"publishTimestamp: {self.publishTimestamp}")
-        print(f"preachDate: {self.preachDate}")
-        print(f"eventType: {self.eventType}")
-        print(f"bibleText: {self.bibleText}")
-
-        url = "https://api.sermonaudio.com/v2/node/sermons"
-
-        headers = {
-            "accept": "application/json",
-            "X-API-Key": SA_API_KEY,
-            "Content-Type": "application/json",
-        }
-
-        sermon_data = {
-            "acceptCopyright": True,
-            "fullTitle": f"{self.fullTitle}",
-            "speakerName": f"{self.speakerName}",
-            "publishTimestamp": self.publishTimestamp,
-            "displayTitle": "",  # You can customize or add more parameters as needed
-            "subtitle": "",
-            "languageCode": "en",
-            "newsInFocus": False,
-            "preachDate": f"{self.preachDate}",
-            "eventType": f"{self.eventType}",
-            "bibleText": f"{self.bibleText}",
-            "moreInfoText": "",
-            "keywords": "",
-        }
-
-        try:
-            response = requests.post(url, headers=headers, data=json.dumps(sermon_data))
-
-            if response.status_code == 200 or 201:
-                sermon_id = response.json().get("sermonID")
-                self.sermonId = sermon_id
-                print(f"Sermon created successfully with ID: {sermon_id}")
-                self.createMedia()
-                return sermon_id
-            else:
-                print(f"Error: {response.status_code}")
-                print(response.text)
-        except Exception as e:
-            print(f"Error: {e}")
-
-    def createMedia(self):
-        url = "https://api.sermonaudio.com/v2/media"
-
-        headers = {
-            "accept": "application/json",
-            "X-API-Key": SA_API_KEY,
-            "Content-Type": "application/json",
-        }
-
-        data = {
-            "uploadType": "original",
-            "sermonID": f"{self.sermonId}",
-            "originalFilename": f"{self.fileName}",
-        }
-
-        try:
-            response = requests.post(url, headers=headers, data=json.dumps(data))
-            if response.status_code == 200 or 201:
-                print(response)
-                uploadURL = response.json().get("uploadURL")
-                self.uploadURL = uploadURL
-                print(f"Upload URL: {uploadURL}")
-                self.uploadMedia()
-            else:
-                print(f"Error: {response.status_code}")
-                print(response.text)
-        except Exception as e:
-            print(f"Error: {e}")
-
-    def uploadMedia(self):
-        url = f"{self.uploadURL}"
-        file_path = f"{self.outFile}"
-
-        header = {"X-API-Key": SA_API_KEY}
-
-        file = {"file": open(file_path, "rb")}
-        with open(file_path, "rb") as fp:
-            try:
-                response = _session.post(url, data=fp, stream=True, headers=header)
-                if response.status_code == 200 or 201:
-                    print(response.text)
-                else:
-                    print(f"Error: {response.status_code}")
-                    print(response.text)
-            except Exception as e:
-                print(f"Error: {e}")
+            response = saapi.upload_audio(sermonid, outFile)
+            if not response:
+                message(
+                    f"Media upload successful."
+                    f"\n\n"
+                    f"  Dashboard URL:\n"
+                    f"  https://www.sermonaudio.com/dashboard/sermons/{sermonid}/"
+                    f"\n\n"
+                    f"  Public URL:\n"
+                    f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermonid}\n"
+                    "   NOTE: Public URL will not be live for another 5 minutes.\n"
+                )

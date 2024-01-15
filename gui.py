@@ -77,8 +77,8 @@ class saRecorder(customtkinter.CTk):
         self.manualEvent = customtkinter.CTkOptionMenu(
             self.sidebarFrame,
             values=[
-                "Sunday AM",
-                "Sunday PM",
+                "Sunday - AM",
+                "Sunday - PM",
                 "Sunday School",
                 "Midweek Service",
                 "Special Meeting",
@@ -156,14 +156,13 @@ class saRecorder(customtkinter.CTk):
         )
         self.seriesLabel.grid(row=1, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
         self.seriesField = customtkinter.CTkComboBox(
-            self.optTagsFrame, width=290, values=saapi.getAllSeries()
+            self.optTagsFrame, width=290, values=saapi.get_series_list()
         )
         self.seriesField.set("")
         self.seriesField.grid(row=1, column=1, padx=20, pady=(20, 20), sticky="nse")
 
     # Functions
     def recording(self):
-        print("Recording started.")
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
         self.engine.is_recording = True
         Thread(target=self.engine.recordAudio).start()
@@ -175,7 +174,6 @@ class saRecorder(customtkinter.CTk):
         )
 
     def notRecording(self):
-        print("Recording ended.")
         self.recordButton.configure(
             text="Begin Recording",
             fg_color=("#3B8ED0", "#1F6AA5"),
@@ -197,7 +195,8 @@ class saRecorder(customtkinter.CTk):
             self.manualDate.get() if str(self.deCheck.get()) == "off" else fullDateStamp
         )
         self.engine.eventType = f"{self.manualEvent.get()}"
-        self.engine.saUpload = f"{self.saUpload.get()}"
+        if self.saUpload.get() == 1:
+            self.engine.saUpload = f"{self.saUpload.get()}"
 
     def userSetDateEvent(self):
         self.manualEvent.configure(
