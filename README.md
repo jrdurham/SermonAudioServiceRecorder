@@ -3,9 +3,9 @@
 A GUI that records audio and uploads it to SermonAudio with the selected parameters.
 
 ## Installation
-1. Install Python 3.12+, if you haven't already.
-1. This repo requires FFMPEG. Make sure to install it from a trusted source.
-1. From the repo's directory, run `pip install -r requirements.txt`.
+1. Install Python 3.12+, if you haven't already.  
+1. This repo requires FFMPEG. Make sure to install it from a trusted source.  
+1. From the repo's directory, run `pip install -r requirements.txt`.  
 
 ## Configuration
 1. Create a text file named `.env` in the root of the repo's directory, and fill it with the following values, replacing `<value>` for each with the appropriate information:
