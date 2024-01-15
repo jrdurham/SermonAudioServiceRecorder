@@ -15,6 +15,9 @@ load_dotenv(os.path.join(BASEDIR, ".env"))
 SA_API_KEY = os.getenv("SA_API_KEY")
 sermonaudio.set_api_key(SA_API_KEY)
 
+def message(message):
+    print(f"[saapi] {message}")
+
 
 def get_series_list():
     page = 1
@@ -50,10 +53,10 @@ def create_sermon(
         keywords=[],
     )
     if response.sermon_id:
-        print(f"Sermon Creation Success. SermonID: {response.sermon_id}")
+        message(f"Sermon Creation Success. SermonID: {response.sermon_id}")
         return response.sermon_id
     else:
-        print(f"[ERROR] Sermon Creation Failed.\nError:\n{response}")
+        message(f"[ERROR] Sermon Creation Failed.\nError:\n{response}")
 
 
 def upload_audio(sermon_id, path):

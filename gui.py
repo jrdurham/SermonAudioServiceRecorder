@@ -163,7 +163,6 @@ class saRecorder(customtkinter.CTk):
 
     # Functions
     def recording(self):
-        print("Recording started.")
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
         self.engine.is_recording = True
         Thread(target=self.engine.recordAudio).start()
@@ -175,7 +174,6 @@ class saRecorder(customtkinter.CTk):
         )
 
     def notRecording(self):
-        print("Recording ended.")
         self.recordButton.configure(
             text="Begin Recording",
             fg_color=("#3B8ED0", "#1F6AA5"),

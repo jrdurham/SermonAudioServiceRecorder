@@ -32,6 +32,9 @@ SA_API_KEY = os.getenv("SA_API_KEY")
 q = queue.Queue()
 
 
+def message(message):
+    print(f"[saAudioEngine] {message}")
+
 class AudioHandler:
     def __init__(
         self,
@@ -62,16 +65,17 @@ class AudioHandler:
         q.put(indata.copy())
 
     def recordAudio(self):
+        message("Initializing Audio Engine...")
         device_info = sd.query_devices(kind="input")
         dev = device_info["index"]
         channels = device_info["max_input_channels"]
         fs = int(device_info["default_samplerate"])
-        print(
-            f"Device Name: {device_info['name']}\nChannels: {channels}\nSample Rate: {fs}"
+        message(
+            f"Audio Device Information:\n\n  Device Name: {device_info['name']}\n  Channels: {channels}\n  Sample Rate: {fs}\n"
         )
         try:
             tmpFile = tempfile.mktemp(
-                prefix="delme_rec_unlimited_", suffix=".wav", dir=""
+                prefix="temp_saae", suffix=".wav", dir=""
             )
             self.tmpFile = tmpFile
             with sf.SoundFile(
@@ -83,14 +87,17 @@ class AudioHandler:
                     channels=channels,
                     callback=self.recCallback,
                 ):
+                    message("Recording audio.")
                     while self.is_recording:
                         file.write(q.get())
         except KeyboardInterrupt:
-            print("\nRecording finished: " + repr(tmpFile))
+            message("Recording finished: " + repr(tmpFile))
         finally:
             self.saveAudio()
+            message("Ready to record.")
 
     def saveAudio(self):
+        message("Recording stopped. Beginning file export.")
         audio = AudioSegment.from_wav(f"{self.tmpFile}")
 
         fade_in_duration = 5000  # in milliseconds
@@ -108,8 +115,10 @@ class AudioHandler:
                 "comment": f"{self.series}",
             },
         )
+        message(f"Audio File: {outFile}")
         os.remove(f"{self.tmpFile}")
         if self.saUpload:
+            message("Sermon Marked for SermonAudio upload, beginning process.")
             sermonid = saapi.create_sermon(
                 self.fullTitle,
                 self.speakerName,
@@ -121,13 +130,13 @@ class AudioHandler:
 
             response = saapi.upload_audio(sermonid, outFile)
             if not response:
-                print(
+                message(
                     f"Media upload successful."
                     f"\n\n"
-                    f"Dashboard URL:\n"
-                    f"https://www.sermonaudio.com/dashboard/sermons/{sermonid}/"
+                    f"  Dashboard URL:\n"
+                    f"  https://www.sermonaudio.com/dashboard/sermons/{sermonid}/"
                     f"\n\n"
-                    f"Public URL:\n"
-                    f"https://www.sermonaudio.com/sermoninfo.asp?SID={sermonid}\n"
-                    "NOTE: Public URL will not be live for another 5 minutes."
+                    f"  Public URL:\n"
+                    f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermonid}\n"
+                    "   NOTE: Public URL will not be live for another 5 minutes.\n"
                 )
