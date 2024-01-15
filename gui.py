@@ -197,7 +197,8 @@ class saRecorder(customtkinter.CTk):
             self.manualDate.get() if str(self.deCheck.get()) == "off" else fullDateStamp
         )
         self.engine.eventType = f"{self.manualEvent.get()}"
-        self.engine.saUpload = f"{self.saUpload.get()}"
+        if self.saUpload.get() == 1:
+            self.engine.saUpload = f"{self.saUpload.get()}"
 
     def userSetDateEvent(self):
         self.manualEvent.configure(
