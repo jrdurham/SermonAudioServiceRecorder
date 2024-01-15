@@ -175,4 +175,6 @@ cython_debug/
 img/*
 
 #SR Config
-config*.json
+config2.json
+!img/logo.png
+!img/icon.ico
