@@ -34,7 +34,6 @@ def get_series_list():
 def create_sermon(
     full_title, speaker_name, publish_timestamp, preach_date, event_type, bible_text
 ):
-    print(event_type)
     response = Broadcaster.create_or_update_sermon(
         full_title=full_title,
         speaker_name=speaker_name,
@@ -50,7 +49,11 @@ def create_sermon(
         language_code="en",
         keywords=[],
     )
-    return response.sermon_id
+    if response.sermon_id:
+        print(f"Sermon Creation Success. SermonID: {response.sermon_id}")
+        return response.sermon_id
+    else:
+        print(f"[ERROR] Sermon Creation Failed.\nError:\n{response}")
 
 
 def upload_audio(sermon_id, path):
