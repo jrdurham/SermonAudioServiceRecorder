@@ -7,3 +7,5 @@ pydub==0.25.1
 python-dotenv==1.0.0
 requests==2.31.0
 sounddevice==0.4.6
+sermonaudio~=6.14.3
+soundfile~=0.12.1

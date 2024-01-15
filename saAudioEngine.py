@@ -1,18 +1,19 @@
 import os
-
 import numpy as np
 import sounddevice as sd
 import soundfile as sf
-
-assert np
+import saapi
 import requests
 import json
 import tempfile
 import queue
 import sys
 from requests import Session
+from datetime import datetime
 from pydub import AudioSegment
 from dotenv import load_dotenv
+
+assert np
 
 import logging
 
@@ -109,7 +110,16 @@ class AudioHandler:
         )
         os.remove(f"{self.tmpFile}")
         if self.saUpload:
-            self.createSermon()
+            sermonid = saapi.create_sermon(
+                self.fullTitle,
+                self.speakerName,
+                self.publishTimestamp,
+                self.preachDate,
+                self.eventType,
+                self.bibleText,
+            )
+            response = saapi.upload_audio(sermonid, outFile)
+            print(response)
 
     def createSermon(self):
         # Print variables before making the API call
