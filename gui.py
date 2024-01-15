@@ -1,31 +1,88 @@
+import customtkinter
 import os
+import saapi
 import time
 from datetime import datetime
-from threading import Thread
-
-import customtkinter
-from PIL import Image
 from dotenv import load_dotenv
-
-import saapi
+from PIL import Image
 from saAudioEngine import AudioHandler as ah
+from sasrconfig import config
+from threading import Thread
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASEDIR, ".env"))
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
+#logoImg = customtkinter.CTkImage(
+#    light_image=None, dark_image=Image.open(os.getenv("GUI_LOGO")), size=(160, 35)
+#)
 logoImg = customtkinter.CTkImage(
-    light_image=None, dark_image=Image.open(os.getenv("GUI_LOGO")), size=(160, 35)
+    light_image=None, dark_image=Image.open(config()["GUI_LOGO"]), size=(160, 35)
 )
 dateNow = datetime.now()
 fullDateStamp = datetime.today().strftime("%Y%m%d")
+
+class SettingsGUI(customtkinter.CTkToplevel):
+    save_args = {}
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.title("Service Recorder Settings")
+        self.geometry(f"{490}x{400}")
+        self.after(10, self.lift)
+
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(5, weight=1)
+        self.top_label = customtkinter.CTkLabel(self, text="Service Recorder Settings")
+        self.top_label.grid(row=0, column=0, columnspan=2, pady=10, sticky="new")
+        self.apikey_label = customtkinter.CTkLabel(self, text="SermonAudio API Key:")
+        self.apikey_label.grid(row=1, column=0, padx=(20,10), pady=(10), sticky="w")
+        self.apikey_field = customtkinter.CTkEntry(self, placeholder_text="Get API key from SermonAudio Members Only Area.")
+        self.apikey_field.grid(row=1, column=1, padx=(10,20), pady=10, sticky="we")
+        self.device_label = customtkinter.CTkLabel(self, text="Audio Input Device:")
+        self.device_label.grid(row=2, column=0, padx=(20, 10), pady=10, sticky="w")
+        self.device_field = customtkinter.CTkOptionMenu(self, values=["PLACEHOLDER 1", "PLACEHOLDER 2", "PLACEHOLDER 3"])
+        self.device_field.grid(row=2, column=1, padx=(10, 20), pady=10, sticky="we")
+        self.audio_path_label = customtkinter.CTkLabel(self, text="Audio File Path:")
+        self.audio_path_label.grid(row=3, column=0, padx=(20,10), pady=(10), sticky="w")
+        self.audio_path_field = customtkinter.CTkEntry(self, placeholder_text="Defaults to ./recordings.")
+        self.audio_path_field.grid(row=3, column=1, padx=(10,20), pady=10, sticky="we")
+        self.save_button = customtkinter.CTkButton(self, text="Save Settings", command=self.save_exit)
+        self.save_button.grid(row=5, column=0, columnspan=2, pady=10, sticky="s")
+
+
+        if "SA_API_KEY" in config():
+            self.apikey_field.insert(0, f"{config()["SA_API_KEY"]}")
+        else:
+            pass
+
+        if "AUDIO_DEVICE" in config():
+            self.device_field.set(f"{config()["AUDIO_DEVICE"]}")
+        else:
+            pass
+
+        if "AUDIO_PATH" in config():
+            self.audio_path_field.insert(0, f"{config()["AUDIO_PATH"]}")
+        else:
+            pass
+
+    def save_exit(self):
+        self.save_args.update({
+            "SA_API_KEY": f"{self.apikey_field.get()}",
+            "AUDIO_DEVICE": f"{self.device_field.get()}",
+            "AUDIO_PATH": f"{self.audio_path_field.get()}"
+        })
+        config(**self.save_args)
+        self.destroy()
+        pass
+
 
 
 class saRecorder(customtkinter.CTk):
     def __init__(self):
         super().__init__()
 
+        self.settings_gui = None
         self.engine = ah()
         self.deCheck = customtkinter.StringVar(value="on")
         self.fileName = "init"
@@ -44,6 +101,7 @@ class saRecorder(customtkinter.CTk):
         self.sidebarFrame = customtkinter.CTkFrame(self, corner_radius=0)
         self.sidebarFrame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebarFrame.columnconfigure(1, weight=1)
+        self.sidebarFrame.rowconfigure(7, weight=1)
         self.logo = customtkinter.CTkLabel(self.sidebarFrame, image=logoImg, text="")
         self.logo.grid(row=0, column=0, pady=(25, 15), columnspan=2)
         self.title_label = customtkinter.CTkLabel(
@@ -94,17 +152,18 @@ class saRecorder(customtkinter.CTk):
         self.manualDateLabel.grid(row=6, column=0, padx=(20, 10), pady=10, sticky="w")
         self.manualDateLabel.configure(state="disabled")
         self.manualDate = customtkinter.CTkEntry(
-            self.sidebarFrame, placeholder_text=f"{fullDateStamp}"
+            self.sidebarFrame, textvariable=customtkinter.StringVar(value=f"{fullDateStamp}")
         )
         self.manualDate.grid(row=6, column=1, padx=(10, 20), pady=20, sticky="ew")
-        # self.manualDate.insert(index=0,string=f"{fullDateStamp}")
+        #self.manualDate.insert(index=0,string=f"{fullDateStamp}")
         self.manualDate.configure(state="disabled")
-        self.testButton = customtkinter.CTkButton(
+        self.manualDate.configure(text_color="gray62")
+        self.settings_gui_button = customtkinter.CTkButton(
             self.sidebarFrame,
-            text="Print filename to console",
-            command=self.printFileName,
+            text="Settings",
+            command=self.open_settings,
         )
-        self.testButton.grid(row=7, column=0, padx=20, pady=10, columnspan=2)
+        self.settings_gui_button.grid(row=7, column=0, padx=20, pady=10, columnspan=2, sticky="s")
 
         # Required Tags
         self.reqTagsFrame = customtkinter.CTkFrame(self)
@@ -205,6 +264,18 @@ class saRecorder(customtkinter.CTk):
         self.manualDate.configure(
             state="normal" if str(self.deCheck.get()) == "off" else "disabled"
         )
+        self.manualDate.configure(
+            text_color="#DCE4EE" if str(self.deCheck.get()) == "off" else "gray62"
+        )
+
+
+    def open_settings(self):
+        if self.settings_gui is None or not self.settings_gui.winfo_exists():
+            self.settings_gui = SettingsGUI(self)
+            time.sleep(1)
+            self.settings_gui.lift()
+        else:
+            self.settings_gui.focus()
 
     def printFileName(self):
         print(self.fileName)
@@ -223,7 +294,7 @@ class saRecorder(customtkinter.CTk):
         return eventType
 
     def timeStamp(self):
-        return datetime.now().timestamp()
+        return int(round(datetime.now().timestamp()))
 
     def checkSeries(self):
         pass
@@ -231,5 +302,5 @@ class saRecorder(customtkinter.CTk):
 
 if __name__ == "__main__":
     sar = saRecorder()
-    sar.iconbitmap(os.getenv("GUI_ICO"))
+    sar.iconbitmap(config()["GUI_ICO"])
     sar.mainloop()

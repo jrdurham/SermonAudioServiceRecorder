@@ -1,33 +1,24 @@
 import os
 import numpy as np
+import queue
+import saapi
 import sounddevice as sd
 import soundfile as sf
-import saapi
-import requests
-import json
-import tempfile
-import queue
 import sys
-from requests import Session
-from datetime import datetime
-from pydub import AudioSegment
+import tempfile
 from dotenv import load_dotenv
-
+from pydub import AudioSegment
+from requests import Session
+from sasrconfig import config
 assert np
-
-import logging
-
-l = logging.getLogger("pydub.converter")
-l.setLevel(logging.ERROR)
-l.addHandler(logging.StreamHandler())
-
 
 _session = Session()
 
 BASEDIR = os.path.abspath(os.path.dirname(__file__))
 load_dotenv(os.path.join(BASEDIR, ".env"))
 
-SA_API_KEY = os.getenv("SA_API_KEY")
+#SA_API_KEY = os.getenv("SA_API_KEY")
+SA_API_KEY = config()["SA_API_KEY"]
 
 q = queue.Queue()
 
