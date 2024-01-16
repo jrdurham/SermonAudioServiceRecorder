@@ -235,7 +235,7 @@ class saRecorder(customtkinter.CTk):
 
     # Functions
     def recording(self):
-        self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
+        self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}"
         self.engine.is_recording = True
         Thread(target=self.engine.recordAudio).start()
         self.recordButton.configure(
@@ -255,7 +255,7 @@ class saRecorder(customtkinter.CTk):
         )
         if str(self.deCheck.get()) == "off":
             self.fileName = (
-                f"{self.manualDate.get()}-{self.manualEvent.get()}_{self.timeStamp()}"
+                f"{self.manualDate.get()}-{self.manualEvent.get()}"
             )
         self.engine.fileName = f"{self.fileName}"
         self.engine.is_recording = False

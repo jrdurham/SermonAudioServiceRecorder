@@ -6,6 +6,7 @@ import sounddevice as sd
 import soundfile as sf
 import sys
 import tempfile
+from datetime import datetime
 from pathlib import Path
 from pydub import AudioSegment
 from requests import Session
@@ -135,7 +136,11 @@ class AudioHandler:
         fade_in_duration = 5000  # in milliseconds
         fade_out_duration = 5000  # in milliseconds
         audio = audio.fade_in(fade_in_duration).fade_out(fade_out_duration)
-        outFile = f"{audio_path}/{self.fileName}.mp3"
+        corrected_file_name = str(f"{self.fileName}").replace(' - ', ' ')
+        self.message(f"{config()["APPEND_TIMESTAMP"]}")
+        if config()["APPEND_TIMESTAMP"] == "TRUE":
+            corrected_file_name = f"{corrected_file_name}_{int(round(datetime.now().timestamp()))}"
+        outFile = f"{audio_path}/{corrected_file_name}.mp3"
         self.outFile = outFile
         audio.export(
             f"{outFile}",
