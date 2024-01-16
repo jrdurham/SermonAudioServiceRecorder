@@ -233,6 +233,12 @@ class saRecorder(customtkinter.CTk):
         self.console.grid(row=2, column=1, padx=10, pady=10, sticky="nsew")
         self.console.configure(state="disabled")
 
+    def validate_config(self):
+        if "BROADCASTER_ID" in config() and not len(config()["BROADCASTER_ID"]) > 0:
+            self.write_console("[WARNING] SermonAudio MemberID is not set!")
+        if "SA_API_KEY" in config() or len(config()["SA_API_KEY"]) != 36:
+            self.write_console("[WARNING] SermonAudio API Key is not set!")
+
     # Functions
     def recording(self):
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}"
@@ -314,12 +320,15 @@ class saRecorder(customtkinter.CTk):
 
     def write_console(self, output):
         self.console.configure(state="normal")
-        self.console.insert(customtkinter.END, output)
+        self.console.insert(customtkinter.END, f"{output}\n")
         self.console.configure(state="disabled")
         self.console.see(customtkinter.END)
 
 
+
+
 if __name__ == "__main__":
     sar = saRecorder()
+    sar.validate_config()
     sar.iconbitmap(config()["GUI_ICO"])
     sar.mainloop()

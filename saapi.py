@@ -11,14 +11,14 @@ def oldmessage(saae, info):
 
 
 def message(saae, info):
-    saae.sar.write_console(f"[API] {info}\n")
+    saae.sar.write_console(f"[API] {info}")
     print(f"[saAudioEngine] {info}")
 
 
 def get_series_titles():
     page = 1
     titles = []
-    if "BROADCASTER_ID" in config():
+    if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
         while True:
             response = Node.get_series_list(
                 broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=page, page_size=5

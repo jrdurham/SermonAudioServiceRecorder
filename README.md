@@ -12,7 +12,7 @@ Service Recorder utilizes the [SermonAudio Python Module](https://pypi.org/proje
 1. Applies a 5 second fade to the beginning and end of the audio.
 1. Exports the resulting audio to an MP3 file in a directory of your choosing.
 1. Saves the relevant fields to the MP3 file's ID3 tag fields used by SermonAudio, just in case you'd rather upload manually 
-via ftp or Dropbox.
+via SermonAudio's ftp or Dropbox options.
 1. Creates a sermon with the information entered before pressing `End Recording`, then uploads the MP3 file to the sermon.
 
 ## What Sermon Recorder Does *NOT* Do
@@ -107,7 +107,7 @@ distortion. I added this option to show my church's logo in the GUI.
 <br>
 
 `GUI_ICO` - Default setting: `img/icon.ico`  
-This is a .ico file that is displayed next to the window title. If you want to replace it, use an icon file
+This is an .ico file that is displayed next to the window title. If you want to replace it, use an icon file
 with a 1:1 aspect ratio, up to a dimension of 256x256.  
 <br>
 

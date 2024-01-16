@@ -76,7 +76,7 @@ class AudioHandler:
         self.series = series
 
     def message(self, info):
-        self.sar.write_console(f"[AudioEngine] {info}\n")
+        self.sar.write_console(f"[AudioEngine] {info}")
         print(f"[AudioEngine] {info}")
 
     def recCallback(self, indata, frames, time, status):
