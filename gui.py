@@ -81,7 +81,6 @@ class SettingsGUI(customtkinter.CTkToplevel):
         pass
 
 
-
 class saRecorder(customtkinter.CTk):
     def __init__(self):
         # Initialize config
@@ -254,7 +253,6 @@ class saRecorder(customtkinter.CTk):
         self.engine.speakerName = f"{self.speakerField.get()}"
         self.engine.bibleText = f"{self.refField.get()}"
         self.engine.series = f"{self.seriesField.get()}"
-        self.engine.publishTimestamp = int(time.time()) + 300
         self.engine.preachDate = (
             self.manualDate.get() if str(self.deCheck.get()) == "off" else fullDateStamp
         )
