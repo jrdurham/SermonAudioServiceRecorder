@@ -13,16 +13,19 @@ def message(info):
 def get_series_titles():
     page = 1
     titles = []
-    while True:
-        response = Node.get_series_list(
-            broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=page, page_size=5
-        )
-        titles.extend([i.title for i in response.results])
-        if response.next_url:
-            page += 1
-        else:
-            break
-    return titles
+    if "BROADCASTER_ID" in config():
+        while True:
+            response = Node.get_series_list(
+                broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=page, page_size=5
+            )
+            titles.extend([i.title for i in response.results])
+            if response.next_url:
+                page += 1
+            else:
+                break
+        return titles
+    else:
+        return ["Enter Member ID in Settings."]
 
 
 def get_series_id(series_name):

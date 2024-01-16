@@ -50,8 +50,7 @@ Next, you can select the `Audio Device` to record from. If you're unsure which d
 the machine's default audio device, so it's probably fine to leave this as is, only change it if you run into issues.
 The final field, `Audio File Path`, allows you to choose where Service Recorder saves the resulting MP3 files.
 <br><br>
-After you've populated the settings window with the appropriate values, close the program and reopen it with the
-`python gui.py` command. You're now ready to press `Begin Recording`! If you're uploading to SermonAudio, make sure to populate the
+After you've populated the settings window with the appropriate values, you're now ready to press `Begin Recording`! If you're uploading to SermonAudio, make sure to populate the
 `Sermon Title` and `Speaker` fields **BEFORE ENDING THE RECORDING**. No, `Text Reference` isn't required and will be
 moving down to the optional section soon. If the `Event` and `Date` fields on the left sidebar aren't the desired
 values, turn off `Automatically Set Date/Event` and choose the desired settings. Make sure to enter your date in
