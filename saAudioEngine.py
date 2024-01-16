@@ -6,25 +6,54 @@ import sounddevice as sd
 import soundfile as sf
 import sys
 import tempfile
-from dotenv import load_dotenv
+from pathlib import Path
 from pydub import AudioSegment
 from requests import Session
 from sasrconfig import config
 assert np
 
 _session = Session()
-
-BASEDIR = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(BASEDIR, ".env"))
-
-#SA_API_KEY = os.getenv("SA_API_KEY")
 SA_API_KEY = config()["SA_API_KEY"]
-
 q = queue.Queue()
 
 
 def message(message):
     print(f"[saAudioEngine] {message}")
+
+
+def default():
+    apis = api_list()
+    sd_default = sd.query_devices(kind="input")
+    dev_index = sd_default["index"]
+    dev_name = sd_default["name"]
+    dev_api = sd_default["hostapi"]
+    return str(f"{dev_index}: {dev_name} ({apis.get(dev_api)})")
+
+
+def dev_list():
+    sd_dev_list = {}
+    devices = []
+    for host_device in sd.query_devices():
+        if host_device["max_input_channels"] > 0:
+            dev_index = host_device["index"]
+            dev_name = host_device["name"]
+            dev_api = host_device["hostapi"]
+            api_name = api_list().get(dev_api)
+            sd_dev_list[dev_index] = (dev_name, dev_api, api_name)
+            devices.append(f"{dev_index}: {dev_name} ({api_name})")
+    return devices
+
+
+def api_list():
+    api = 0
+    sd_api_list = {}
+    for host_api in sd.query_hostapis():
+        api_index = api
+        api_name = host_api["name"]
+        sd_api_list.update({api:f"{api_name}"})
+        api = api + 1
+    return sd_api_list
+
 
 class AudioHandler:
     def __init__(
@@ -56,8 +85,12 @@ class AudioHandler:
         q.put(indata.copy())
 
     def recordAudio(self):
+        if "AUDIO_DEVICE" in config():
+            audio_dev_id = int(str(config()["AUDIO_DEVICE"]).split(':')[0])
+            device_info = sd.query_devices(device=audio_dev_id)
+        else:
+            device_info = sd.query_devices(kind="input")
         message("Initializing Audio Engine...")
-        device_info = sd.query_devices(kind="input")
         dev = device_info["index"]
         channels = device_info["max_input_channels"]
         fs = int(device_info["default_samplerate"])
@@ -88,13 +121,22 @@ class AudioHandler:
             message("Ready to record.")
 
     def saveAudio(self):
+        audio_path = config()["AUDIO_PATH"]
         message("Recording stopped. Beginning file export.")
-        audio = AudioSegment.from_wav(f"{self.tmpFile}")
+        message("Validating destination path.")
+        if not os.path.exists(f"{audio_path}"):
+            message("Destination path does not exist...")
+            try:
+                Path(f"{audio_path}").mkdir(parents=True, exist_ok=True)
+            except FileExistsError:
+                message(f"Unable to create {config()["AUDIO_PATH"]} directory. Saving to repo directory.")
+                audio_path = "."
 
+        audio = AudioSegment.from_wav(f"{self.tmpFile}")
         fade_in_duration = 5000  # in milliseconds
         fade_out_duration = 5000  # in milliseconds
         audio = audio.fade_in(fade_in_duration).fade_out(fade_out_duration)
-        outFile = f"{os.getenv('AUDIO_DIR')}{self.fileName}.mp3"
+        outFile = f"{audio_path}/{self.fileName}.mp3"
         self.outFile = outFile
         audio.export(
             f"{outFile}",

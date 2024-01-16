@@ -1,30 +1,25 @@
 import customtkinter
-import os
 import saapi
 import time
 from datetime import datetime
-from dotenv import load_dotenv
 from PIL import Image
+import saAudioEngine as saae
 from saAudioEngine import AudioHandler as ah
 from sasrconfig import config
 from threading import Thread
 
-BASEDIR = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(BASEDIR, ".env"))
-
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
-#logoImg = customtkinter.CTkImage(
-#    light_image=None, dark_image=Image.open(os.getenv("GUI_LOGO")), size=(160, 35)
-#)
 logoImg = customtkinter.CTkImage(
     light_image=None, dark_image=Image.open(config()["GUI_LOGO"]), size=(160, 35)
 )
 dateNow = datetime.now()
 fullDateStamp = datetime.today().strftime("%Y%m%d")
 
+
 class SettingsGUI(customtkinter.CTkToplevel):
     save_args = {}
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.title("Service Recorder Settings")
@@ -35,23 +30,31 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.rowconfigure(5, weight=1)
         self.top_label = customtkinter.CTkLabel(self, text="Service Recorder Settings")
         self.top_label.grid(row=0, column=0, columnspan=2, pady=10, sticky="new")
-        self.apikey_label = customtkinter.CTkLabel(self, text="SermonAudio API Key:")
-        self.apikey_label.grid(row=1, column=0, padx=(20,10), pady=(10), sticky="w")
-        self.apikey_field = customtkinter.CTkEntry(self, placeholder_text="Get API key from SermonAudio Members Only Area.")
-        self.apikey_field.grid(row=1, column=1, padx=(10,20), pady=10, sticky="we")
+        self.broadcaster_label = customtkinter.CTkLabel(self, text="Broadcaster ID:")
+        self.broadcaster_label.grid(row=1, column=0, padx=(20,10), pady=(10), sticky="w")
+        self.broadcaster_field = customtkinter.CTkEntry(self, placeholder_text="")
+        self.broadcaster_field.grid(row=1, column=1, padx=(10,20), pady=10, sticky="we")
+        self.apikey_label = customtkinter.CTkLabel(self, text="API Key:")
+        self.apikey_label.grid(row=2, column=0, padx=(20,10), pady=(10), sticky="w")
+        self.apikey_field = customtkinter.CTkEntry(self, placeholder_text="Listed at SermonAudio members only area.")
+        self.apikey_field.grid(row=2, column=1, padx=(10,20), pady=10, sticky="we")
         self.device_label = customtkinter.CTkLabel(self, text="Audio Input Device:")
-        self.device_label.grid(row=2, column=0, padx=(20, 10), pady=10, sticky="w")
-        self.device_field = customtkinter.CTkOptionMenu(self, values=["PLACEHOLDER 1", "PLACEHOLDER 2", "PLACEHOLDER 3"])
-        self.device_field.grid(row=2, column=1, padx=(10, 20), pady=10, sticky="we")
+        self.device_label.grid(row=3, column=0, padx=(20, 10), pady=10, sticky="w")
+        self.device_field = customtkinter.CTkOptionMenu(self, values=saae.dev_list())
+        self.device_field.grid(row=3, column=1, padx=(10, 20), pady=10, sticky="we")
         self.audio_path_label = customtkinter.CTkLabel(self, text="Audio File Path:")
-        self.audio_path_label.grid(row=3, column=0, padx=(20,10), pady=(10), sticky="w")
+        self.audio_path_label.grid(row=4, column=0, padx=(20,10), pady=(10), sticky="w")
         self.audio_path_field = customtkinter.CTkEntry(self, placeholder_text="Defaults to ./recordings.")
-        self.audio_path_field.grid(row=3, column=1, padx=(10,20), pady=10, sticky="we")
+        self.audio_path_field.grid(row=4, column=1, padx=(10,20), pady=10, sticky="we")
         self.save_button = customtkinter.CTkButton(self, text="Save Settings", command=self.save_exit)
         self.save_button.grid(row=5, column=0, columnspan=2, pady=10, sticky="s")
 
+        if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
+            self.broadcaster_label.insert(0, f"{config()["BROADCASTER_ID"]}")
+        else:
+            pass
 
-        if "SA_API_KEY" in config():
+        if "SA_API_KEY" in config() and len(config()["SA_API_KEY"]) == 32:
             self.apikey_field.insert(0, f"{config()["SA_API_KEY"]}")
         else:
             pass
@@ -59,7 +62,7 @@ class SettingsGUI(customtkinter.CTkToplevel):
         if "AUDIO_DEVICE" in config():
             self.device_field.set(f"{config()["AUDIO_DEVICE"]}")
         else:
-            pass
+            self.device_field.set(value=f"{saae.default()}")
 
         if "AUDIO_PATH" in config():
             self.audio_path_field.insert(0, f"{config()["AUDIO_PATH"]}")
@@ -68,6 +71,7 @@ class SettingsGUI(customtkinter.CTkToplevel):
 
     def save_exit(self):
         self.save_args.update({
+            "BROADCASTER_ID": f"{self.broadcaster_field.get()}",
             "SA_API_KEY": f"{self.apikey_field.get()}",
             "AUDIO_DEVICE": f"{self.device_field.get()}",
             "AUDIO_PATH": f"{self.audio_path_field.get()}"
@@ -80,6 +84,8 @@ class SettingsGUI(customtkinter.CTkToplevel):
 
 class saRecorder(customtkinter.CTk):
     def __init__(self):
+        # Initialize config
+        config()
         super().__init__()
 
         self.settings_gui = None
@@ -155,7 +161,6 @@ class saRecorder(customtkinter.CTk):
             self.sidebarFrame, textvariable=customtkinter.StringVar(value=f"{fullDateStamp}")
         )
         self.manualDate.grid(row=6, column=1, padx=(10, 20), pady=20, sticky="ew")
-        #self.manualDate.insert(index=0,string=f"{fullDateStamp}")
         self.manualDate.configure(state="disabled")
         self.manualDate.configure(text_color="gray62")
         self.settings_gui_button = customtkinter.CTkButton(
@@ -215,7 +220,7 @@ class saRecorder(customtkinter.CTk):
         )
         self.seriesLabel.grid(row=1, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
         self.seriesField = customtkinter.CTkComboBox(
-            self.optTagsFrame, width=290, values=saapi.get_series_list()
+            self.optTagsFrame, width=290, values=saapi.get_series_titles()
         )
         self.seriesField.set("")
         self.seriesField.grid(row=1, column=1, padx=20, pady=(20, 20), sticky="nse")
