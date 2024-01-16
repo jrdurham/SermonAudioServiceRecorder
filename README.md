@@ -1,7 +1,7 @@
 # SermonAudio Service Recorder  
 <break>  
 ![Service Recorder](https://i.imgur.com/hKfOBGA.png)  
-<break>
+<break>  
 ## What Service Recorder Does
 
 Service Recorder is a Python program that assists in recording sermons and uploading them to SermonAudio. This program
