@@ -1,6 +1,6 @@
 # SermonAudio Service Recorder  
 <break>  
-![Service Recorder](https://i.imgur.com/hKfOBGA.png)  
+<img src=https://i.imgur.com/hKfOBGA.png)> 
 <break>  
 ## What Service Recorder Does
 
