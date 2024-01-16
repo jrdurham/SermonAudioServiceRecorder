@@ -48,7 +48,7 @@ In the settings menu of Service Recorder, paste the `Member ID` and `API Key` in
 <br><br>
 Next, you can select the `Audio Device` to record from. If you're unsure which device to use, Service Recorder uses
 the machine's default audio device, so it's probably fine to leave this as is, only change it if you run into issues.
-The final field, `Audio File Path`, allows you to choose where Service Recorder saves the resulting MP3 files.  
+The final field, `Audio File Path`, allows you to choose where Service Recorder saves the resulting MP3 files.
 <br><br>
 After you've populated the settings window with the appropriate values, close the program and reopen it with the
 `python gui.py` command. You're now ready to press `Begin Recording`! If you're uploading to SermonAudio, make sure to populate the
