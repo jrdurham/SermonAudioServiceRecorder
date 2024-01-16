@@ -17,8 +17,8 @@ SA_API_KEY = config()["SA_API_KEY"]
 q = queue.Queue()
 
 
-def message(message):
-    print(f"[saAudioEngine] {message}")
+def message(info):
+    print(f"[saAudioEngine] {info}")
 
 
 def default():
@@ -48,9 +48,8 @@ def api_list():
     api = 0
     sd_api_list = {}
     for host_api in sd.query_hostapis():
-        api_index = api
         api_name = host_api["name"]
-        sd_api_list.update({api:f"{api_name}"})
+        sd_api_list.update({api: f"{api_name}"})
         api = api + 1
     return sd_api_list
 
@@ -62,7 +61,6 @@ class AudioHandler:
         saUpload=None,
         fullTitle="",
         speakerName="",
-        publishTimestamp="",
         preachDate="",
         eventType="",
         bibleText="",
@@ -73,7 +71,6 @@ class AudioHandler:
         self.saUpload = saUpload
         self.fullTitle = fullTitle
         self.speakerName = speakerName
-        self.publishTimestamp = publishTimestamp
         self.preachDate = preachDate
         self.eventType = eventType
         self.bibleText = bibleText
@@ -97,11 +94,11 @@ class AudioHandler:
         message(
             f"Audio Device Information:\n\n  Device Name: {device_info['name']}\n  Channels: {channels}\n  Sample Rate: {fs}\n"
         )
+        tmpFile = tempfile.mktemp(
+            prefix="temp_saae", suffix=".wav", dir=""
+        )
+        self.tmpFile = tmpFile
         try:
-            tmpFile = tempfile.mktemp(
-                prefix="temp_saae", suffix=".wav", dir=""
-            )
-            self.tmpFile = tmpFile
             with sf.SoundFile(
                 tmpFile, mode="x", samplerate=fs, channels=channels
             ) as file:
@@ -152,24 +149,24 @@ class AudioHandler:
         os.remove(f"{self.tmpFile}")
         if self.saUpload:
             message("Sermon Marked for SermonAudio upload, beginning process.")
-            sermonid = saapi.create_sermon(
+            sermon_id = saapi.create_sermon(
                 self.fullTitle,
                 self.speakerName,
-                self.publishTimestamp,
                 self.preachDate,
                 self.eventType,
                 self.bibleText,
+                self.series
             )
 
-            response = saapi.upload_audio(sermonid, outFile)
+            response = saapi.upload_audio(sermon_id, outFile)
             if not response:
                 message(
                     f"Media upload successful."
                     f"\n\n"
                     f"  Dashboard URL:\n"
-                    f"  https://www.sermonaudio.com/dashboard/sermons/{sermonid}/"
+                    f"  https://www.sermonaudio.com/dashboard/sermons/{sermon_id}/"
                     f"\n\n"
                     f"  Public URL:\n"
-                    f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermonid}\n"
+                    f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermon_id}\n"
                     "   NOTE: Public URL will not be live for another 5 minutes.\n"
                 )
