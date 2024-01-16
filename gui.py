@@ -20,8 +20,9 @@ fullDateStamp = datetime.today().strftime("%Y%m%d")
 class SettingsGUI(customtkinter.CTkToplevel):
     save_args = {}
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, sa_recorder_instance, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.sa_recorder_instance = sa_recorder_instance
         self.title("Service Recorder Settings")
         self.geometry(f"{490}x{400}")
         self.after(10, self.lift)
@@ -50,11 +51,11 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.save_button.grid(row=5, column=0, columnspan=2, pady=10, sticky="s")
 
         if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
-            self.broadcaster_label.insert(0, f"{config()["BROADCASTER_ID"]}")
+            self.broadcaster_field.insert(0, f"{config()["BROADCASTER_ID"]}")
         else:
             pass
 
-        if "SA_API_KEY" in config() and len(config()["SA_API_KEY"]) == 32:
+        if "SA_API_KEY" in config() and len(config()["SA_API_KEY"]) == 36:
             self.apikey_field.insert(0, f"{config()["SA_API_KEY"]}")
         else:
             pass
@@ -78,6 +79,7 @@ class SettingsGUI(customtkinter.CTkToplevel):
         })
         config(**self.save_args)
         self.destroy()
+        self.sa_recorder_instance.update_series_field()
         pass
 
 
@@ -274,7 +276,7 @@ class saRecorder(customtkinter.CTk):
 
     def open_settings(self):
         if self.settings_gui is None or not self.settings_gui.winfo_exists():
-            self.settings_gui = SettingsGUI(self)
+            self.settings_gui = SettingsGUI(self, self)
             time.sleep(1)
             self.settings_gui.lift()
         else:
@@ -299,8 +301,8 @@ class saRecorder(customtkinter.CTk):
     def timeStamp(self):
         return int(round(datetime.now().timestamp()))
 
-    def checkSeries(self):
-        pass
+    def update_series_field(self):
+        self.seriesField.configure(values=saapi.get_series_titles())
 
 
 if __name__ == "__main__":
