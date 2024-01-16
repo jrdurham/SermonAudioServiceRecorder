@@ -37,7 +37,7 @@ If neither of these two things deter you, proceed!
 There, you will find the easy ways to install FFMPEG like `winget`, as well as the release builds for download.)
 1. From the repo's directory, run `pip install -r requirements.txt`.  
 
-## Running SermonAudio Service Recorder
+## Running SermonAudio Recorder
 To run the GUI, it's as simple as running `python gui.py` from within the root directory of the repo.
 
 When you first run Service Recorder, click `Settings` in the lower left hand side of the window, and populate
