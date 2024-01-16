@@ -12,10 +12,7 @@ Service Recorder utilizes the [SermonAudio Python Module](https://pypi.org/proje
 1. Applies a 5 second fade to the beginning and end of the audio.
 1. Exports the resulting audio to an MP3 file in a directory of your choosing.
 1. Saves the relevant fields to the MP3 file's ID3 tag fields used by SermonAudio, just in case you'd rather upload manually 
-via ftp or Dropbox.  
-*Note: For debugging purposes, current behavior appends a timestamp to the file name, for example:
-`20240115-Sunday - AM_1705374455.mp3`. Remove the `_ 1705374455` section of the file name before uploading via other
-semi-automated means. There is no need to remove the timestamp if you're uploading to SermonAudio via the website.*
+via ftp or Dropbox.
 1. Creates a sermon with the information entered before pressing `End Recording`, then uploads the MP3 file to the sermon.
 
 ## What Sermon Recorder Does *NOT* Do
