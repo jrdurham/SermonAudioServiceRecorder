@@ -78,7 +78,7 @@ Event Type: `Midweek Service`  (Wednesday evening)
 Criteria: Recording started on Wednesday *after* 1700.  
 <br>
 
-A few more options are available via the dropdown menu if you desect `Automatically Set Date/Event`, to allow easy use
+A few more options are available via the dropdown menu if you deselect `Automatically Set Date/Event`, to allow easy use
 during special services like Camp Meetings and Revivals. Not all of the SermonAudio event types are listed here, 
 as a matter of fact, most of them are *not*, however I do plan to add them in the
 future.  
