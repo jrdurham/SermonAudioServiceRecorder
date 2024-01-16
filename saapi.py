@@ -6,8 +6,13 @@ from sermonaudio.broadcaster.requests import Broadcaster
 from sermonaudio import models
 
 
-def message(info):
+def oldmessage(saae, info):
     print(f"[saapi] {info}")
+
+
+def message(saae, info):
+    saae.sar.write_console(f"[API] {info}\n")
+    print(f"[saAudioEngine] {info}")
 
 
 def get_series_titles():
@@ -43,7 +48,7 @@ def get_series_id(series_name):
             return False
 
 
-def create_sermon(
+def create_sermon(saae,
     full_title, speaker_name, preach_date, event_type, bible_text, series=None
 ):
     api_key = f"{config()["SA_API_KEY"]}"
@@ -64,37 +69,37 @@ def create_sermon(
         keywords=[],
     )
     if series:
-        message(f"Series supplied: {series}")
+        message(saae, f"Series supplied: {series}")
         series_id = get_series_id(f"{series}")
         if series_id:
-            message(f"Series exists, adding {response.sermon_id} to \"{series}\".")
+            message(saae, f"Series exists, adding {response.sermon_id} to \"{series}\".")
             add_to_series = Broadcaster.move_sermon_to_series(sermon_id=response.sermon_id, series_id=str(series_id))
             if add_to_series:
-                message(f"Sermon ID {response.sermon_id} added to series \"{series}\".")
+                message(saae, f"Sermon ID {response.sermon_id} added to series \"{series}\".")
             else:
-                message(f"Unable to add sermon to series, this will need to be done manually via the website.")
+                message(saae, f"Unable to add sermon to series, this will need to be done manually via the website.")
         else:
-            message(f"Series \"{series}\" does not exist, creating.")
+            message(saae, f"Series \"{series}\" does not exist, creating.")
             series_create_response = Broadcaster.create_series(
                 title=f"{series}", broadcaster_id=f"{config()["BROADCASTER_ID"]}"
             )
             if series_create_response:
                 series_id = get_series_id(f"{series}")
-                message(f"Series \"{series}\" Created, adding {response.sermon_id} to it.")
+                message(saae, f"Series \"{series}\" Created, adding {response.sermon_id} to it.")
                 add_to_series = Broadcaster.move_sermon_to_series(sermon_id=response.sermon_id, series_id=series_id)
                 if add_to_series:
-                    message(f"Sermon ID {response.sermon_id} added to series \"{series}\".")
+                    message(saae, f"Sermon ID {response.sermon_id} added to series \"{series}\".")
                 else:
-                    message("Series created, but adding sermon to it failed. "
+                    message(saae, "Series created, but adding sermon to it failed. "
                             "This will need to be done manually via the website.")
             else:
-                message("Unable to create series. This will need to be performed manually via the website. "
+                message(saae, "Unable to create series. This will need to be performed manually via the website. "
                         "After the series has been created, the sermon will need to be added to it manually as well.")
     if response.sermon_id:
-        message(f"Sermon Creation Success. SermonID: {response.sermon_id}")
+        message(saae, f"Sermon Creation Success. SermonID: {response.sermon_id}")
         return response.sermon_id
     else:
-        message(f"[ERROR] Sermon Creation Failed.\nError:\n{response}")
+        message(saae, f"[ERROR] Sermon Creation Failed.\nError:\n{response}")
 
 
 def upload_audio(sermon_id, path):
