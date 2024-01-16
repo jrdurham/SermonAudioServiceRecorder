@@ -1,30 +1,21 @@
-import json
-import os
-import requests
 import sermonaudio
 from datetime import datetime, timedelta
-import time
+from sasrconfig import config
 from sermonaudio.node.requests import Node
 from sermonaudio.broadcaster.requests import Broadcaster
 from sermonaudio import models
-from dotenv import load_dotenv
 
-BASEDIR = os.path.abspath(os.path.dirname(__file__))
-load_dotenv(os.path.join(BASEDIR, ".env"))
-
-SA_API_KEY = os.getenv("SA_API_KEY")
-sermonaudio.set_api_key(SA_API_KEY)
 
 def message(message):
     print(f"[saapi] {message}")
 
 
-def get_series_list():
+def get_series_titles():
     page = 1
     titles = []
     while True:
         response = Node.get_series_list(
-            broadcaster_id="calvaryfaytn", page={page}, page_size=5
+            broadcaster_id=f"{config()["BROADCASTER_ID"]}", page={page}, page_size=5
         )
         titles.extend([i.title for i in response.results])
         if response.next_url:
@@ -37,6 +28,8 @@ def get_series_list():
 def create_sermon(
     full_title, speaker_name, publish_timestamp, preach_date, event_type, bible_text
 ):
+    SA_API_KEY = f"{config()["SA_API_KEY"]}"
+    sermonaudio.set_api_key(SA_API_KEY)
     response = Broadcaster.create_or_update_sermon(
         full_title=full_title,
         speaker_name=speaker_name,
@@ -60,4 +53,6 @@ def create_sermon(
 
 
 def upload_audio(sermon_id, path):
+    SA_API_KEY = f"{config()["SA_API_KEY"]}"
+    sermonaudio.set_api_key(SA_API_KEY)
     Broadcaster.upload_audio(sermon_id=sermon_id, path=path)

@@ -160,6 +160,7 @@ cython_debug/
 #.idea/
 
 # Audio Files
+recordings/*
 .mp3
 .wav
 .flac
@@ -173,3 +174,8 @@ cython_debug/
 .ico
 .svg
 img/*
+
+#SR Config
+config*.json
+!img/logo.png
+!img/icon.ico
