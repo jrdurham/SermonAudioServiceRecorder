@@ -17,10 +17,6 @@ SA_API_KEY = config()["SA_API_KEY"]
 q = queue.Queue()
 
 
-def message(info):
-    print(f"[saAudioEngine] {info}")
-
-
 def default():
     apis = api_list()
     sd_default = sd.query_devices(kind="input")
@@ -57,6 +53,7 @@ def api_list():
 class AudioHandler:
     def __init__(
         self,
+        sar_instance,
         fileName="",
         saUpload=None,
         fullTitle="",
@@ -66,6 +63,7 @@ class AudioHandler:
         bibleText="",
         series="",
     ):
+        self.sar = sar_instance
         self.fileName = fileName
         self.is_recording = False
         self.saUpload = saUpload
@@ -75,6 +73,10 @@ class AudioHandler:
         self.eventType = eventType
         self.bibleText = bibleText
         self.series = series
+
+    def message(self, info):
+        self.sar.write_console(f"[AudioEngine] {info}\n")
+        print(f"[AudioEngine] {info}")
 
     def recCallback(self, indata, frames, time, status):
         if status:
@@ -87,11 +89,11 @@ class AudioHandler:
             device_info = sd.query_devices(device=audio_dev_id)
         else:
             device_info = sd.query_devices(kind="input")
-        message("Initializing Audio Engine...")
+        self.message("Initializing Audio Engine...")
         dev = device_info["index"]
         channels = device_info["max_input_channels"]
         fs = int(device_info["default_samplerate"])
-        message(
+        self.message(
             f"Audio Device Information:\n\n  Device Name: {device_info['name']}\n  Channels: {channels}\n  Sample Rate: {fs}\n"
         )
         tmpFile = tempfile.mktemp(
@@ -108,25 +110,25 @@ class AudioHandler:
                     channels=channels,
                     callback=self.recCallback,
                 ):
-                    message("Recording audio.")
+                    self.message("Recording audio.")
                     while self.is_recording:
                         file.write(q.get())
         except KeyboardInterrupt:
-            message("Recording finished: " + repr(tmpFile))
+            self.message("Recording finished: " + repr(tmpFile))
         finally:
             self.saveAudio()
-            message("Ready to record.")
+            self.message("Ready to record.")
 
     def saveAudio(self):
         audio_path = config()["AUDIO_PATH"]
-        message("Recording stopped. Beginning file export.")
-        message("Validating destination path.")
+        self.message("Recording stopped. Beginning file export.")
+        self.message("Validating destination path.")
         if not os.path.exists(f"{audio_path}"):
-            message("Destination path does not exist...")
+            self.message("Destination path does not exist...")
             try:
                 Path(f"{audio_path}").mkdir(parents=True, exist_ok=True)
             except FileExistsError:
-                message(f"Unable to create {config()["AUDIO_PATH"]} directory. Saving to repo directory.")
+                self.message(f"Unable to create {config()["AUDIO_PATH"]} directory. Saving to repo directory.")
                 audio_path = "."
 
         audio = AudioSegment.from_wav(f"{self.tmpFile}")
@@ -145,11 +147,12 @@ class AudioHandler:
                 "comment": f"{self.series}",
             },
         )
-        message(f"Audio File: {outFile}")
+        self.message(f"Audio File: {outFile}")
         os.remove(f"{self.tmpFile}")
         if self.saUpload:
-            message("Sermon Marked for SermonAudio upload, beginning process.")
+            self.message("Sermon Marked for SermonAudio upload, beginning process.")
             sermon_id = saapi.create_sermon(
+                self,
                 self.fullTitle,
                 self.speakerName,
                 self.preachDate,
@@ -160,7 +163,7 @@ class AudioHandler:
 
             response = saapi.upload_audio(sermon_id, outFile)
             if not response:
-                message(
+                self.message(
                     f"Media upload successful."
                     f"\n\n"
                     f"  Dashboard URL:\n"
@@ -170,3 +173,5 @@ class AudioHandler:
                     f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermon_id}\n"
                     "   NOTE: Public URL will not be live for another 5 minutes.\n"
                 )
+            self.sar.update_series_field()
+            self.sar.seriesField.set(value=f"{self.series}")

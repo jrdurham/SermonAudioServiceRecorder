@@ -1,3 +1,5 @@
+import sys
+
 import customtkinter
 import saapi
 import time
@@ -90,14 +92,14 @@ class saRecorder(customtkinter.CTk):
         super().__init__()
 
         self.settings_gui = None
-        self.engine = ah()
+        self.engine = ah(self)
         self.deCheck = customtkinter.StringVar(value="on")
         self.fileName = "init"
         self.sermon_id = None
 
         # configure window
         self.title("Service Recorder")
-        self.geometry(f"{660}x{580}")
+        self.geometry(f"{760}x{580}")
 
         self.grid_columnconfigure(1, weight=1)
         self.grid_columnconfigure((2, 0), weight=0)
@@ -176,7 +178,7 @@ class saRecorder(customtkinter.CTk):
         self.reqTagsFrame.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="nwes")
         self.reqTagsFrame.columnconfigure(1, weight=1)
         self.frameLabel = customtkinter.CTkLabel(
-            self.reqTagsFrame, text="Required ID3 Tags"
+            self.reqTagsFrame, text="Required Parameters"
         )
         self.frameLabel.grid(
             row=0, column=0, padx=20, pady=(5, 0), sticky="new", columnspan=2
@@ -196,35 +198,40 @@ class saRecorder(customtkinter.CTk):
         self.speakerField = customtkinter.CTkEntry(
             self.reqTagsFrame, placeholder_text="Example: Johnny Clardy", width=290
         )
-        self.speakerField.grid(row=2, column=1, padx=(20), pady=(20, 0), sticky="nse")
-        self.refLabel = customtkinter.CTkLabel(
-            self.reqTagsFrame, text="Text Reference:"
-        )
-        self.refLabel.grid(row=3, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
-        self.refField = customtkinter.CTkEntry(
-            self.reqTagsFrame, placeholder_text="Example: 2 Corinthians 9", width=290
-        )
-        self.refField.grid(row=3, column=1, padx=20, pady=(20, 20), sticky="nse")
+        self.speakerField.grid(row=2, column=1, padx=(20), pady=20, sticky="nse")
 
         # Optional Tags
         self.optTagsFrame = customtkinter.CTkFrame(self)
         self.optTagsFrame.grid(row=1, column=1, padx=10, pady=(10, 0), sticky="nwe")
         self.optTagsFrame.columnconfigure(1, weight=1)
         self.frameLabel = customtkinter.CTkLabel(
-            self.optTagsFrame, text="Optional ID3 Tags"
+            self.optTagsFrame, text="Optional Parameters"
         )
         self.frameLabel.grid(
             row=0, column=0, padx=20, pady=(5, 0), sticky="new", columnspan=2
         )
+        self.refLabel = customtkinter.CTkLabel(
+            self.optTagsFrame, text="Text Reference:"
+        )
+        self.refLabel.grid(row=1, column=0, padx=(10, 0), pady=(20, 0), sticky="w")
+        self.refField = customtkinter.CTkEntry(
+            self.optTagsFrame, placeholder_text="Example: 2 Corinthians 9; Romans 5", width=290
+        )
+        self.refField.grid(row=1, column=1, padx=20, pady=(20, 0), sticky="nse")
         self.seriesLabel = customtkinter.CTkLabel(
             self.optTagsFrame, text="Series Title:"
         )
-        self.seriesLabel.grid(row=1, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
+        self.seriesLabel.grid(row=2, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
         self.seriesField = customtkinter.CTkComboBox(
             self.optTagsFrame, width=290, values=saapi.get_series_titles()
         )
         self.seriesField.set("")
-        self.seriesField.grid(row=1, column=1, padx=20, pady=(20, 20), sticky="nse")
+        self.seriesField.grid(row=2, column=1, padx=20, pady=(20, 20), sticky="nse")
+
+        # Console Output
+        self.console = customtkinter.CTkTextbox(self)
+        self.console.grid(row=2, column=1, padx=10, pady=10, sticky="nsew")
+        self.console.configure(state="disabled")
 
     # Functions
     def recording(self):
@@ -239,6 +246,7 @@ class saRecorder(customtkinter.CTk):
         )
 
     def notRecording(self):
+        self.console.focus()
         self.recordButton.configure(
             text="Begin Recording",
             fg_color=("#3B8ED0", "#1F6AA5"),
@@ -303,6 +311,12 @@ class saRecorder(customtkinter.CTk):
 
     def update_series_field(self):
         self.seriesField.configure(values=saapi.get_series_titles())
+
+    def write_console(self, output):
+        self.console.configure(state="normal")
+        self.console.insert(customtkinter.END, output)
+        self.console.configure(state="disabled")
+        self.console.see(customtkinter.END)
 
 
 if __name__ == "__main__":
