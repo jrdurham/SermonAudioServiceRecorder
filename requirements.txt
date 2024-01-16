@@ -4,8 +4,7 @@ customtkinter==5.2.2
 numpy==1.26.3
 pillow==10.2.0
 pydub==0.25.1
-python-dotenv==1.0.0
 requests==2.31.0
+sermonaudio==6.14.3
 sounddevice==0.4.6
-sermonaudio~=6.14.3
-soundfile~=0.12.1
+soundfile==0.12.1

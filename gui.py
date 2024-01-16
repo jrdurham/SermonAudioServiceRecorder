@@ -30,7 +30,7 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.rowconfigure(5, weight=1)
         self.top_label = customtkinter.CTkLabel(self, text="Service Recorder Settings")
         self.top_label.grid(row=0, column=0, columnspan=2, pady=10, sticky="new")
-        self.broadcaster_label = customtkinter.CTkLabel(self, text="Broadcaster ID:")
+        self.broadcaster_label = customtkinter.CTkLabel(self, text="Member ID:")
         self.broadcaster_label.grid(row=1, column=0, padx=(20,10), pady=(10), sticky="w")
         self.broadcaster_field = customtkinter.CTkEntry(self, placeholder_text="")
         self.broadcaster_field.grid(row=1, column=1, padx=(10,20), pady=10, sticky="we")
