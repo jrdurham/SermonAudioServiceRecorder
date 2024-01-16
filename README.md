@@ -97,8 +97,8 @@ Currently, there are three extra options that can be manually set there:
 
 `APPEND_TIMESTAMP` - Default setting:  `FALSE`  
 If you change this setting to `TRUE`, a unix timestamp will be appended to the filename at export.
-this is useful when testing and multiple files are being generated that might have the same filename
-with the GUI's default filenaming behaviors.
+This is useful when testing and multiple files are being generated that might have the same filename
+when set via the GUI's default file naming behaviors.
 <br>
 
 `GUI_LOGO` - Default setting: `img/logo.png`  
