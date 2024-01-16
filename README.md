@@ -57,3 +57,57 @@ values, turn off `Automatically Set Date/Event` and choose the desired settings.
 the `YYYYMMDD` format. Once you're done, click `End Recording`, and Service Recorder will take care of the rest!
 <br><br>
 *Note: Keep an eye on the console window, it prints some useful information about the audio file and upload process!*
+
+## Useful Information  
+<br>
+
+### Automatic Event Logic
+By default, Service Recorder sets the event type automatically to one of three event types for SermonAudio's upload.
+based on when the recording is started. The logic works as follows:  
+<br>
+Event Type: `Sunday School`  
+Criteria: Recording started on Sunday *before* 1100.  
+<br>
+Event Type: `Sunday - AM` (Main Sunday morning service)  
+Criteria: Recording started on Sunday *after* 1100, but before 1400.  
+<br>
+Event Type: `Sunday PM`  
+Criteria: Recording started on Sunday *after* 1700  
+<br>
+Event Type: `Midweek Service`  (Wednesday evening)  
+Criteria: Recording started on Wednesday *after* 1700.  
+<br>
+
+### SermonAudio Publish Time
+Uploaded sermons are set to publish 5 minutes after the sermon is created.
+This is to allow a short window to correct any information that might've been entered incorrectly in the GUI
+or make any changes to the sermon on SermonAudio's website before it goes public.  
+<br>
+
+### Extra Config Options
+When the GUI is first run, it will create a file named "config.json" in the repo directory.
+Currently, there are three extra options that can be manually set there:  
+<br>
+
+`APPEND_TIMESTAMP` - Default setting:  `FALSE`  
+If you change this setting to `TRUE`, a unix timestamp will be appended to the filename at export.
+this is useful when testing and multiple files are being generated that might have the same filename
+with the GUI's default filenaming behaviors.
+<br>
+
+`GUI_LOGO` - Default setting: `img/logo.png`  
+This is an image file that is displayed in the GUI above the 'Service Recorder' text.
+A blank image file is included with the repo, it can be edited directly, replaced, or you can specify a path
+to an image with this option. If you'd like to do this, the image size in GUI is 160x35.
+Your image can be larger, but needs to match the 32:7 ratio of the original image to display without
+distortion. I added this option to show my church's logo in the GUI.  
+<br>
+
+`GUI_ICO` - Default setting: `img/icon.ico`  
+This is a .ico file that is displayed next to the window title. If you want to replace it, use an icon file
+with a 1:1 aspect ratio, up to a dimension of 256x256.  
+<br>
+
+In addition to these three options, you can also set the options that are configurable via the
+GUI here as well, although the `DEVICE_NAME` setting needs to match the exact option from the GUI, so it's
+best to not manually edit this option via config.json.

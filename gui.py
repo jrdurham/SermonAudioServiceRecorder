@@ -300,7 +300,7 @@ class saRecorder(customtkinter.CTk):
             eventType = "Sunday AM"
         elif dateNow.weekday() == 6 and dateNow.hour >= 17:
             eventType = "Sunday PM"
-        elif dateNow.weekday() == 2 and dateNow.hour >= 18:
+        elif dateNow.weekday() == 2 and dateNow.hour >= 17:
             eventType = "Midweek Service"
         else:
             eventType = "Special Meeting"
