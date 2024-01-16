@@ -4,7 +4,7 @@
 <br>
 
 Service Recorder utilizes the [SermonAudio Python Module](https://pypi.org/project/sermonaudio/) and 
-[CustomTkinter](https://customtkinter.tomschimansky.com/) to assist in recording sermons and automate upload them to SermonAudio.
+[CustomTkinter](https://customtkinter.tomschimansky.com/) to assist in recording sermons and automate the process of uploading them to SermonAudio.
 
 ## What Service Recorder Does
 
