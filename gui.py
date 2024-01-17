@@ -1,6 +1,3 @@
-import os.path
-import sys
-
 import customtkinter
 import saapi
 import time
@@ -261,7 +258,6 @@ class saRecorder(customtkinter.CTk):
         else:
             self.id_status.configure(image=grn_status)
             id_state = "valid"
-            #self.write_console(f"[ServiceRecorder] MemberID: {config()["BROADCASTER_ID"]}")
 
         key_state = saapi.check_key()
         if key_state == "no-key":
@@ -272,14 +268,21 @@ class saRecorder(customtkinter.CTk):
             self.write_console("[WARNING] SermonAudio API Key is invalid!")
         else:
             self.api_status.configure(image=grn_status)
-            #self.write_console("[ServiceRecorder] SermonAudio API Key is valid.")
 
         if id_state == "valid" and key_state == "valid":
+            self.sa_status = True
             self.write_console("[ServiceRecorder] Configuration valid, ready to record.")
+        else:
+            self.sa_status = False
         self.update_series_field()
+
+        if not id_state == "valid" or not key_state == "valid":
+            self.write_console("[ServiceRecorder] Open Settings to configure ServiceRecorder.")
 
     # Functions
     def recording(self):
+        self.settings_gui_button.configure(state="disabled")
+        self.write_console("[ServiceRecorder] Settings disabled while recording.")
         self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}"
         self.engine.is_recording = True
         Thread(target=self.engine.recordAudio).start()
@@ -302,6 +305,7 @@ class saRecorder(customtkinter.CTk):
             self.fileName = (
                 f"{self.manualDate.get()}-{self.manualEvent.get()}"
             )
+        self.engine.sa_status = self.sa_status
         self.engine.fileName = f"{self.fileName}"
         self.engine.is_recording = False
         self.engine.fullTitle = f"{self.sermonField.get()}"
@@ -314,6 +318,7 @@ class saRecorder(customtkinter.CTk):
         self.engine.eventType = f"{self.manualEvent.get()}"
         if self.saUpload.get() == 1:
             self.engine.saUpload = f"{self.saUpload.get()}"
+        self.settings_gui_button.configure(state="normal")
 
     def userSetDateEvent(self):
         self.manualEvent.configure(
@@ -369,7 +374,5 @@ class saRecorder(customtkinter.CTk):
 if __name__ == "__main__":
     sar = saRecorder()
     sar.validate_config()
-    if config()["FIRST_RUN"]:
-        sar.open_settings()
     sar.iconbitmap(config()["GUI_ICO"])
     sar.mainloop()

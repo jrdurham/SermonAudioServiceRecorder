@@ -63,6 +63,7 @@ class AudioHandler:
         eventType="",
         bibleText="",
         series="",
+        sa_status=False
     ):
         self.sar = sar_instance
         self.fileName = fileName
@@ -74,6 +75,7 @@ class AudioHandler:
         self.eventType = eventType
         self.bibleText = bibleText
         self.series = series
+        self.sa_status = sa_status
 
     def message(self, info):
         self.sar.write_console(f"[AudioEngine] {info}")
@@ -137,7 +139,6 @@ class AudioHandler:
         fade_out_duration = 5000  # in milliseconds
         audio = audio.fade_in(fade_in_duration).fade_out(fade_out_duration)
         corrected_file_name = str(f"{self.fileName}").replace(' - ', ' ')
-        self.message(f"{config()["APPEND_TIMESTAMP"]}")
         if config()["APPEND_TIMESTAMP"] == "TRUE":
             corrected_file_name = f"{corrected_file_name}_{int(round(datetime.now().timestamp()))}"
         outFile = f"{audio_path}/{corrected_file_name}.mp3"
@@ -155,28 +156,37 @@ class AudioHandler:
         self.message(f"Audio File: {outFile}")
         os.remove(f"{self.tmpFile}")
         if self.saUpload:
-            self.message("Sermon Marked for SermonAudio upload, beginning process.")
-            sermon_id = saapi.create_sermon(
-                self,
-                self.fullTitle,
-                self.speakerName,
-                self.preachDate,
-                self.eventType,
-                self.bibleText,
-                self.series
-            )
-
-            response = saapi.upload_audio(sermon_id, outFile)
-            if not response:
-                self.message(
-                    f"Media upload successful."
-                    f"\n\n"
-                    f"  Dashboard URL:\n"
-                    f"  https://www.sermonaudio.com/dashboard/sermons/{sermon_id}/"
-                    f"\n\n"
-                    f"  Public URL:\n"
-                    f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermon_id}\n"
-                    "   NOTE: Public URL will not be live for another 5 minutes.\n"
+            if not self.sa_status:
+                self.message("Sermon marked for SermonAudio upload, but configuration is invalid. Skipping upload.")
+            elif not self.fullTitle:
+                self.message("Sermon marked for upload, but the Title field is empty (required). Skipping upload.")
+            elif not self.speakerName:
+                self.message("Sermon marked for upload, but the Speaker field is empty (required). Skipping upload.")
+            elif self.saUpload and self.sa_status:
+                self.message("Sermon Marked for SermonAudio upload, beginning process.")
+                sermon_id = saapi.create_sermon(
+                    self,
+                    self.fullTitle,
+                    self.speakerName,
+                    self.preachDate,
+                    self.eventType,
+                    self.bibleText,
+                    self.series
                 )
-            self.sar.update_series_field()
-            self.sar.seriesField.set(value=f"{self.series}")
+
+                response = saapi.upload_audio(sermon_id, outFile)
+                if not response:
+                    self.message(
+                        f"Media upload successful."
+                        f"\n\n"
+                        f"  Dashboard URL:\n"
+                        f"  https://www.sermonaudio.com/dashboard/sermons/{sermon_id}/"
+                        f"\n\n"
+                        f"  Public URL:\n"
+                        f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermon_id}\n"
+                        "   NOTE: Public URL will not be live for another 5 minutes.\n"
+                    )
+                self.sar.update_series_field()
+                self.sar.seriesField.set(value=f"{self.series}")
+        else:
+            self.message("Sermon not marked for upload.")

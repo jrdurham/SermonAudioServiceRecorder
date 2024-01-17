@@ -26,7 +26,7 @@ def check_broadcaster():
         else:
             return False
     else:
-        return ["Enter Member ID in Settings."]
+        return False
 
 
 def check_key():
