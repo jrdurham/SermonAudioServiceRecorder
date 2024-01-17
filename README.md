@@ -4,7 +4,7 @@
 <br>
 
 Service Recorder utilizes the [SermonAudio Python Module](https://pypi.org/project/sermonaudio/) and 
-[CustomTkinter](https://customtkinter.tomschimansky.com/) to assist in recording sermons and automate the process of uploading them to SermonAudio.
+[CustomTkinter](https://customtkinter.tomschimansky.com/) to assist in recording audio during church services and automate the process of uploading them to SermonAudio.
 
 ## What Service Recorder Does
 
@@ -15,7 +15,7 @@ Service Recorder utilizes the [SermonAudio Python Module](https://pypi.org/proje
 via SermonAudio's ftp or Dropbox options.
 1. Creates a SermonAudio entry with the information entered before pressing `End Recording`, then uploads the MP3 file to the sermon.
 
-## What Sermon Recorder Does *NOT* Do
+## What Service Recorder Does *NOT* Do
 Handle errors and exceptions very well. This was thrown together over the course of a weekend. I am a novice python developer, 
 so trying to utilize it outside of the expected behavior won't work well. I hope to introduce better error handling in the future. The biggest
 thing to watch out for is that all three fields in the `Required ID3 Tags` section are filled out _prior_ to ending the recording.
