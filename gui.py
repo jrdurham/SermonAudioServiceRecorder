@@ -1,5 +1,3 @@
-import sys
-
 import customtkinter
 import saapi
 import time
@@ -15,9 +13,14 @@ customtkinter.set_default_color_theme("blue")
 logoImg = customtkinter.CTkImage(
     light_image=None, dark_image=Image.open(config()["GUI_LOGO"]), size=(160, 35)
 )
+red_status = customtkinter.CTkImage(
+    light_image=Image.open('img/red.png'), dark_image=Image.open('img/red.png'), size=(10, 10)
+)
+grn_status = customtkinter.CTkImage(
+    light_image=Image.open('img/red.png'), dark_image=Image.open('img/grn.png'), size=(10, 10)
+)
 dateNow = datetime.now()
 fullDateStamp = datetime.today().strftime("%Y%m%d")
-
 
 class SettingsGUI(customtkinter.CTkToplevel):
     save_args = {}
@@ -28,6 +31,8 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.title("Service Recorder Settings")
         self.geometry(f"{490}x{400}")
         self.after(10, self.lift)
+        if config()["FIRST_RUN"]:
+            self.after(1600, self.lift)
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(5, weight=1)
@@ -35,11 +40,11 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.top_label.grid(row=0, column=0, columnspan=2, pady=10, sticky="new")
         self.broadcaster_label = customtkinter.CTkLabel(self, text="Member ID:")
         self.broadcaster_label.grid(row=1, column=0, padx=(20,10), pady=(10), sticky="w")
-        self.broadcaster_field = customtkinter.CTkEntry(self, placeholder_text="")
+        self.broadcaster_field = customtkinter.CTkEntry(self, placeholder_text="Listed at SermonAudio members only area.")
         self.broadcaster_field.grid(row=1, column=1, padx=(10,20), pady=10, sticky="we")
         self.apikey_label = customtkinter.CTkLabel(self, text="API Key:")
         self.apikey_label.grid(row=2, column=0, padx=(20,10), pady=(10), sticky="w")
-        self.apikey_field = customtkinter.CTkEntry(self, placeholder_text="Listed at SermonAudio members only area.")
+        self.apikey_field = customtkinter.CTkEntry(self, placeholder_text="Listed at SermonAudio members only area.", show='•')
         self.apikey_field.grid(row=2, column=1, padx=(10,20), pady=10, sticky="we")
         self.device_label = customtkinter.CTkLabel(self, text="Audio Input Device:")
         self.device_label.grid(row=3, column=0, padx=(20, 10), pady=10, sticky="w")
@@ -52,12 +57,12 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.save_button = customtkinter.CTkButton(self, text="Save Settings", command=self.save_exit)
         self.save_button.grid(row=5, column=0, columnspan=2, pady=10, sticky="s")
 
-        if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
+        if len(config()["BROADCASTER_ID"]) > 0:
             self.broadcaster_field.insert(0, f"{config()["BROADCASTER_ID"]}")
         else:
             pass
 
-        if "SA_API_KEY" in config() and len(config()["SA_API_KEY"]) == 36:
+        if len(config()["SA_API_KEY"]) == 36:
             self.apikey_field.insert(0, f"{config()["SA_API_KEY"]}")
         else:
             pass
@@ -77,18 +82,17 @@ class SettingsGUI(customtkinter.CTkToplevel):
             "BROADCASTER_ID": f"{self.broadcaster_field.get()}",
             "SA_API_KEY": f"{self.apikey_field.get()}",
             "AUDIO_DEVICE": f"{self.device_field.get()}",
-            "AUDIO_PATH": f"{self.audio_path_field.get()}"
+            "AUDIO_PATH": f"{self.audio_path_field.get()}",
+            "FIRST_RUN": False
         })
         config(**self.save_args)
         self.destroy()
-        self.sa_recorder_instance.update_series_field()
+        self.sa_recorder_instance.validate_config()
         pass
 
 
 class saRecorder(customtkinter.CTk):
     def __init__(self):
-        # Initialize config
-        config()
         super().__init__()
 
         self.settings_gui = None
@@ -110,7 +114,7 @@ class saRecorder(customtkinter.CTk):
         self.sidebarFrame = customtkinter.CTkFrame(self, corner_radius=0)
         self.sidebarFrame.grid(row=0, column=0, rowspan=4, sticky="nsew")
         self.sidebarFrame.columnconfigure(1, weight=1)
-        self.sidebarFrame.rowconfigure(7, weight=1)
+        self.sidebarFrame.rowconfigure(9, weight=1)
         self.logo = customtkinter.CTkLabel(self.sidebarFrame, image=logoImg, text="")
         self.logo.grid(row=0, column=0, pady=(25, 15), columnspan=2)
         self.title_label = customtkinter.CTkLabel(
@@ -166,17 +170,28 @@ class saRecorder(customtkinter.CTk):
         self.manualDate.grid(row=6, column=1, padx=(10, 20), pady=20, sticky="ew")
         self.manualDate.configure(state="disabled")
         self.manualDate.configure(text_color="gray62")
+        self.status_frame = customtkinter.CTkFrame(self.sidebarFrame, corner_radius=0, fg_color="transparent")
+        self.status_frame.grid(row=7, column=0, padx=5, pady=10, columnspan=2, sticky="we")
+        self.status_frame.grid_columnconfigure(1, weight=1)
+        self.id_status = customtkinter.CTkLabel(self.status_frame, image=red_status, text='')
+        self.id_status.grid(row=0, column=0, padx=(20, 5), pady=(10, 5), sticky="w")
+        self.id_status_label = customtkinter.CTkLabel(self.status_frame, text="Member ID Status")
+        self.id_status_label.grid(row=0, column=1, padx=(5, 20), pady=(10, 5), sticky="w", columnspan=2)
+        self.api_status = customtkinter.CTkLabel(self.status_frame, image=red_status, text='')
+        self.api_status.grid(row=1, column=0, padx=(20, 5), pady=(0, 10), sticky="w")
+        self.api_status_label = customtkinter.CTkLabel(self.status_frame, text="API Key Status")
+        self.api_status_label.grid(row=1, column=1, padx=(5, 20), pady=(0, 10), sticky="w", columnspan=2)
         self.settings_gui_button = customtkinter.CTkButton(
             self.sidebarFrame,
             text="Settings",
             command=self.open_settings,
         )
-        self.settings_gui_button.grid(row=7, column=0, padx=20, pady=10, columnspan=2, sticky="s")
+        self.settings_gui_button.grid(row=9, column=0, padx=20, pady=10, columnspan=2, sticky="s")
 
         # Required Tags
         self.reqTagsFrame = customtkinter.CTkFrame(self)
         self.reqTagsFrame.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="nwes")
-        self.reqTagsFrame.columnconfigure(1, weight=1)
+        self.reqTagsFrame.columnconfigure(1, weight=2)
         self.frameLabel = customtkinter.CTkLabel(
             self.reqTagsFrame, text="Required Parameters"
         )
@@ -190,13 +205,13 @@ class saRecorder(customtkinter.CTk):
         self.sermonField = customtkinter.CTkEntry(
             self.reqTagsFrame,
             placeholder_text="Example: The Gift of Eternal Life",
-            width=290,
+            width=360,
         )
         self.sermonField.grid(row=1, column=1, padx=20, pady=(20, 0), sticky="nse")
         self.speakerLabel = customtkinter.CTkLabel(self.reqTagsFrame, text="Speaker:")
-        self.speakerLabel.grid(row=2, column=0, padx=(10, 0), pady=(20, 0), sticky="w")
+        self.speakerLabel.grid(row=2, column=0, padx=(10, 0), pady=20, sticky="w")
         self.speakerField = customtkinter.CTkEntry(
-            self.reqTagsFrame, placeholder_text="Example: Johnny Clardy", width=290
+            self.reqTagsFrame, placeholder_text="Example: Johnny Clardy", width=360
         )
         self.speakerField.grid(row=2, column=1, padx=(20), pady=20, sticky="nse")
 
@@ -215,15 +230,15 @@ class saRecorder(customtkinter.CTk):
         )
         self.refLabel.grid(row=1, column=0, padx=(10, 0), pady=(20, 0), sticky="w")
         self.refField = customtkinter.CTkEntry(
-            self.optTagsFrame, placeholder_text="Example: 2 Corinthians 9; Romans 5", width=290
+            self.optTagsFrame, placeholder_text="Example: 2 Corinthians 9; Romans 5", width=360
         )
         self.refField.grid(row=1, column=1, padx=20, pady=(20, 0), sticky="nse")
         self.seriesLabel = customtkinter.CTkLabel(
             self.optTagsFrame, text="Series Title:"
         )
-        self.seriesLabel.grid(row=2, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
+        self.seriesLabel.grid(row=2, column=0, padx=(10, 0), pady=20, sticky="w")
         self.seriesField = customtkinter.CTkComboBox(
-            self.optTagsFrame, width=290, values=saapi.get_series_titles()
+            self.optTagsFrame, width=360, values=saapi.get_series_titles()
         )
         self.seriesField.set("")
         self.seriesField.grid(row=2, column=1, padx=20, pady=(20, 20), sticky="nse")
@@ -233,9 +248,42 @@ class saRecorder(customtkinter.CTk):
         self.console.grid(row=2, column=1, padx=10, pady=10, sticky="nsew")
         self.console.configure(state="disabled")
 
+    def validate_config(self):
+        if "BROADCASTER_ID" not in config() or not len(config()["BROADCASTER_ID"]) > 0:
+            self.write_console("[WARNING] SermonAudio Member ID is not set!")
+            id_state = "no-id"
+        elif not saapi.check_broadcaster():
+            self.write_console("[WARNING] SermonAudio Member ID is invalid!")
+            id_state = "bad-id"
+        else:
+            self.id_status.configure(image=grn_status)
+            id_state = "valid"
+
+        key_state = saapi.check_key()
+        if key_state == "no-key":
+            self.write_console("[WARNING] SermonAudio API Key is not set!")
+        elif key_state == "bad-id":
+            self.write_console("[WARNING] Unable to validate API key, Member ID is not valid!")
+        elif key_state == "invalid":
+            self.write_console("[WARNING] SermonAudio API Key is invalid!")
+        else:
+            self.api_status.configure(image=grn_status)
+
+        if id_state == "valid" and key_state == "valid":
+            self.sa_status = True
+            self.write_console("[ServiceRecorder] Configuration valid, ready to record.")
+        else:
+            self.sa_status = False
+        self.update_series_field()
+
+        if not id_state == "valid" or not key_state == "valid":
+            self.write_console("[ServiceRecorder] Open Settings to configure ServiceRecorder.")
+
     # Functions
     def recording(self):
-        self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}_{self.timeStamp()}"
+        self.settings_gui_button.configure(state="disabled")
+        self.write_console("[ServiceRecorder] Settings disabled while recording.")
+        self.fileName = f"{fullDateStamp}-{self.manualEvent.get()}"
         self.engine.is_recording = True
         Thread(target=self.engine.recordAudio).start()
         self.recordButton.configure(
@@ -255,8 +303,9 @@ class saRecorder(customtkinter.CTk):
         )
         if str(self.deCheck.get()) == "off":
             self.fileName = (
-                f"{self.manualDate.get()}-{self.manualEvent.get()}_{self.timeStamp()}"
+                f"{self.manualDate.get()}-{self.manualEvent.get()}"
             )
+        self.engine.sa_status = self.sa_status
         self.engine.fileName = f"{self.fileName}"
         self.engine.is_recording = False
         self.engine.fullTitle = f"{self.sermonField.get()}"
@@ -269,6 +318,7 @@ class saRecorder(customtkinter.CTk):
         self.engine.eventType = f"{self.manualEvent.get()}"
         if self.saUpload.get() == 1:
             self.engine.saUpload = f"{self.saUpload.get()}"
+        self.settings_gui_button.configure(state="normal")
 
     def userSetDateEvent(self):
         self.manualEvent.configure(
@@ -300,7 +350,7 @@ class saRecorder(customtkinter.CTk):
             eventType = "Sunday AM"
         elif dateNow.weekday() == 6 and dateNow.hour >= 17:
             eventType = "Sunday PM"
-        elif dateNow.weekday() == 2 and dateNow.hour >= 18:
+        elif dateNow.weekday() == 2 and dateNow.hour >= 17:
             eventType = "Midweek Service"
         else:
             eventType = "Special Meeting"
@@ -310,16 +360,19 @@ class saRecorder(customtkinter.CTk):
         return int(round(datetime.now().timestamp()))
 
     def update_series_field(self):
-        self.seriesField.configure(values=saapi.get_series_titles())
+        self.seriesField.configure(values=saapi.get_series_titles(), state="normal")
 
     def write_console(self, output):
         self.console.configure(state="normal")
-        self.console.insert(customtkinter.END, output)
+        self.console.insert(customtkinter.END, f"{output}\n")
         self.console.configure(state="disabled")
         self.console.see(customtkinter.END)
 
 
+
+
 if __name__ == "__main__":
     sar = saRecorder()
+    sar.validate_config()
     sar.iconbitmap(config()["GUI_ICO"])
     sar.mainloop()

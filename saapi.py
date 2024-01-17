@@ -1,3 +1,4 @@
+import requests
 import sermonaudio
 from datetime import datetime, timedelta
 from sasrconfig import config
@@ -6,19 +7,60 @@ from sermonaudio.broadcaster.requests import Broadcaster
 from sermonaudio import models
 
 
-def oldmessage(saae, info):
-    print(f"[saapi] {info}")
-
-
 def message(saae, info):
-    saae.sar.write_console(f"[API] {info}\n")
+    saae.sar.write_console(f"[API] {info}")
     print(f"[saAudioEngine] {info}")
+
+def check_broadcaster():
+    if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
+
+        url = f"https://api.sermonaudio.com/v2/node/broadcasters/{config()["BROADCASTER_ID"]}?lite=true"
+
+        headers = {
+            "accept": "application/json",
+        }
+
+        response = requests.get(url, headers=headers)
+        if response.status_code == 200:
+            return True
+        else:
+            return False
+    else:
+        return False
+
+
+def check_key():
+    if "SA_API_KEY" in config() and len(config()["SA_API_KEY"]) == 36:
+
+        try:
+            sermon_id = Node.get_sermons(broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=1, page_size=1).results[0].sermon_id
+        except sermonaudio.node.requests.NodeAPIError:
+            return str("bad-id")
+        except IndexError:
+            return str("bad-id")
+        url = f"https://api.sermonaudio.com/v2/node/sermons/{sermon_id}"
+
+        headers = {
+            "accept": "*/*",
+            "X-API-Key": f"{config()["SA_API_KEY"]}",
+            "Content-Type": "application/json"
+        }
+
+        response = requests.patch(url, headers=headers)
+        if response.status_code == 422:
+            return str("valid")
+        elif response.status_code == 401 or 404:
+            return str("invalid")
+        else:
+            return str("invalid")
+    else:
+        return "no-key"
 
 
 def get_series_titles():
     page = 1
     titles = []
-    if "BROADCASTER_ID" in config():
+    if check_broadcaster():
         while True:
             response = Node.get_series_list(
                 broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=page, page_size=5
@@ -56,7 +98,7 @@ def create_sermon(saae,
     response = Broadcaster.create_or_update_sermon(
         full_title=full_title,
         speaker_name=speaker_name,
-        publish_timestamp=datetime.now() + timedelta(days=1),
+        publish_timestamp=datetime.now() + timedelta(minutes=5),
         preach_date=datetime.strptime(preach_date, "%Y%m%d"),
         event_type=models.SermonEventType(value=event_type),
         bible_text=bible_text,

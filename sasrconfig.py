@@ -17,10 +17,13 @@ def config(**kwargs):
 def _config_initialize(config_path):
     if not os.path.isfile(config_path):
         initial = {
+            "APPEND_TIMESTAMP": "FALSE",
+            "BROADCASTER_ID": "",
             "SA_API_KEY": "",
             "GUI_LOGO": "img/logo.png",
             "GUI_ICO": "img/icon.ico",
-            "AUDIO_PATH": "recordings"
+            "AUDIO_PATH": "recordings",
+            "FIRST_RUN": True
 
         }
         with open(config_path, "w") as config_file:
