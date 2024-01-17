@@ -191,7 +191,7 @@ class saRecorder(customtkinter.CTk):
         # Required Tags
         self.reqTagsFrame = customtkinter.CTkFrame(self)
         self.reqTagsFrame.grid(row=0, column=1, padx=10, pady=(10, 0), sticky="nwes")
-        self.reqTagsFrame.columnconfigure(1, weight=1)
+        self.reqTagsFrame.columnconfigure(1, weight=2)
         self.frameLabel = customtkinter.CTkLabel(
             self.reqTagsFrame, text="Required Parameters"
         )
@@ -205,13 +205,13 @@ class saRecorder(customtkinter.CTk):
         self.sermonField = customtkinter.CTkEntry(
             self.reqTagsFrame,
             placeholder_text="Example: The Gift of Eternal Life",
-            width=290,
+            width=360,
         )
         self.sermonField.grid(row=1, column=1, padx=20, pady=(20, 0), sticky="nse")
         self.speakerLabel = customtkinter.CTkLabel(self.reqTagsFrame, text="Speaker:")
-        self.speakerLabel.grid(row=2, column=0, padx=(10, 0), pady=(20, 0), sticky="w")
+        self.speakerLabel.grid(row=2, column=0, padx=(10, 0), pady=20, sticky="w")
         self.speakerField = customtkinter.CTkEntry(
-            self.reqTagsFrame, placeholder_text="Example: Johnny Clardy", width=290
+            self.reqTagsFrame, placeholder_text="Example: Johnny Clardy", width=360
         )
         self.speakerField.grid(row=2, column=1, padx=(20), pady=20, sticky="nse")
 
@@ -230,15 +230,15 @@ class saRecorder(customtkinter.CTk):
         )
         self.refLabel.grid(row=1, column=0, padx=(10, 0), pady=(20, 0), sticky="w")
         self.refField = customtkinter.CTkEntry(
-            self.optTagsFrame, placeholder_text="Example: 2 Corinthians 9; Romans 5", width=290
+            self.optTagsFrame, placeholder_text="Example: 2 Corinthians 9; Romans 5", width=360
         )
         self.refField.grid(row=1, column=1, padx=20, pady=(20, 0), sticky="nse")
         self.seriesLabel = customtkinter.CTkLabel(
             self.optTagsFrame, text="Series Title:"
         )
-        self.seriesLabel.grid(row=2, column=0, padx=(10, 0), pady=(20, 20), sticky="w")
+        self.seriesLabel.grid(row=2, column=0, padx=(10, 0), pady=20, sticky="w")
         self.seriesField = customtkinter.CTkComboBox(
-            self.optTagsFrame, width=290, values=saapi.get_series_titles()
+            self.optTagsFrame, width=360, values=saapi.get_series_titles()
         )
         self.seriesField.set("")
         self.seriesField.grid(row=2, column=1, padx=20, pady=(20, 20), sticky="nse")
