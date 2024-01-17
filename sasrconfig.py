@@ -1,5 +1,6 @@
-import os
 import json
+import os
+
 
 def config(**kwargs):
     config_path = "config.json"
@@ -23,8 +24,7 @@ def _config_initialize(config_path):
             "GUI_LOGO": "img/logo.png",
             "GUI_ICO": "img/icon.ico",
             "AUDIO_PATH": "recordings",
-            "FIRST_RUN": True
-
+            "FIRST_RUN": True,
         }
         with open(config_path, "w") as config_file:
             config_file.write(json.dumps(initial))
