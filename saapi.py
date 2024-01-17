@@ -26,7 +26,7 @@ def check_broadcaster():
         else:
             return False
     else:
-        return False
+        return ["Enter Member ID in Settings."]
 
 
 def check_key():
@@ -35,6 +35,8 @@ def check_key():
         try:
             sermon_id = Node.get_sermons(broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=1, page_size=1).results[0].sermon_id
         except sermonaudio.node.requests.NodeAPIError:
+            return str("bad-id")
+        except IndexError:
             return str("bad-id")
         url = f"https://api.sermonaudio.com/v2/node/sermons/{sermon_id}"
 
@@ -45,9 +47,10 @@ def check_key():
         }
 
         response = requests.patch(url, headers=headers)
-        print(response)
         if response.status_code == 422:
             return str("valid")
+        elif response.status_code == 401 or 404:
+            return str("invalid")
         else:
             return str("invalid")
     else:
@@ -57,7 +60,7 @@ def check_key():
 def get_series_titles():
     page = 1
     titles = []
-    if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
+    if check_broadcaster():
         while True:
             response = Node.get_series_list(
                 broadcaster_id=f"{config()["BROADCASTER_ID"]}", page=page, page_size=5
@@ -95,7 +98,7 @@ def create_sermon(saae,
     response = Broadcaster.create_or_update_sermon(
         full_title=full_title,
         speaker_name=speaker_name,
-        publish_timestamp=datetime.now() + timedelta(days=1),
+        publish_timestamp=datetime.now() + timedelta(minutes=5),
         preach_date=datetime.strptime(preach_date, "%Y%m%d"),
         event_type=models.SermonEventType(value=event_type),
         bible_text=bible_text,
