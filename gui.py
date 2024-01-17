@@ -1,3 +1,4 @@
+import os.path
 import sys
 
 import customtkinter
@@ -18,7 +19,6 @@ logoImg = customtkinter.CTkImage(
 dateNow = datetime.now()
 fullDateStamp = datetime.today().strftime("%Y%m%d")
 
-
 class SettingsGUI(customtkinter.CTkToplevel):
     save_args = {}
 
@@ -28,6 +28,8 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.title("Service Recorder Settings")
         self.geometry(f"{490}x{400}")
         self.after(10, self.lift)
+        if config()["FIRST_RUN"]:
+            self.after(1600, self.lift)
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(5, weight=1)
@@ -35,7 +37,7 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.top_label.grid(row=0, column=0, columnspan=2, pady=10, sticky="new")
         self.broadcaster_label = customtkinter.CTkLabel(self, text="Member ID:")
         self.broadcaster_label.grid(row=1, column=0, padx=(20,10), pady=(10), sticky="w")
-        self.broadcaster_field = customtkinter.CTkEntry(self, placeholder_text="")
+        self.broadcaster_field = customtkinter.CTkEntry(self, placeholder_text="Listed at SermonAudio members only area.")
         self.broadcaster_field.grid(row=1, column=1, padx=(10,20), pady=10, sticky="we")
         self.apikey_label = customtkinter.CTkLabel(self, text="API Key:")
         self.apikey_label.grid(row=2, column=0, padx=(20,10), pady=(10), sticky="w")
@@ -52,12 +54,12 @@ class SettingsGUI(customtkinter.CTkToplevel):
         self.save_button = customtkinter.CTkButton(self, text="Save Settings", command=self.save_exit)
         self.save_button.grid(row=5, column=0, columnspan=2, pady=10, sticky="s")
 
-        if "BROADCASTER_ID" in config() and len(config()["BROADCASTER_ID"]) > 0:
+        if len(config()["BROADCASTER_ID"]) > 0:
             self.broadcaster_field.insert(0, f"{config()["BROADCASTER_ID"]}")
         else:
             pass
 
-        if "SA_API_KEY" in config() and len(config()["SA_API_KEY"]) == 36:
+        if len(config()["SA_API_KEY"]) == 36:
             self.apikey_field.insert(0, f"{config()["SA_API_KEY"]}")
         else:
             pass
@@ -77,7 +79,8 @@ class SettingsGUI(customtkinter.CTkToplevel):
             "BROADCASTER_ID": f"{self.broadcaster_field.get()}",
             "SA_API_KEY": f"{self.apikey_field.get()}",
             "AUDIO_DEVICE": f"{self.device_field.get()}",
-            "AUDIO_PATH": f"{self.audio_path_field.get()}"
+            "AUDIO_PATH": f"{self.audio_path_field.get()}",
+            "FIRST_RUN": False
         })
         config(**self.save_args)
         self.destroy()
@@ -87,8 +90,6 @@ class SettingsGUI(customtkinter.CTkToplevel):
 
 class saRecorder(customtkinter.CTk):
     def __init__(self):
-        # Initialize config
-        config()
         super().__init__()
 
         self.settings_gui = None
@@ -234,10 +235,22 @@ class saRecorder(customtkinter.CTk):
         self.console.configure(state="disabled")
 
     def validate_config(self):
-        if "BROADCASTER_ID" in config() and not len(config()["BROADCASTER_ID"]) > 0:
-            self.write_console("[WARNING] SermonAudio MemberID is not set!")
-        if "SA_API_KEY" in config() or len(config()["SA_API_KEY"]) != 36:
+        if "BROADCASTER_ID" not in config() or not len(config()["BROADCASTER_ID"]) > 0:
+            self.write_console("[WARNING] SermonAudio Member ID is not set!")
+        elif not saapi.check_broadcaster():
+            self.write_console("[WARNING] SermonAudio Member ID is invalid!")
+        else:
+            self.write_console(f"[ServiceRecorder] MemberID: {config()["BROADCASTER_ID"]}")
+
+        key_state = saapi.check_key()
+        if key_state == "no-key":
             self.write_console("[WARNING] SermonAudio API Key is not set!")
+        elif key_state == "bad-id":
+            self.write_console("[WARNING] Unable to validate API key, Member ID is not valid!")
+        elif key_state == "invalid":
+            self.write_console("[WARNING] SermonAudio API Key is invalid!")
+        else:
+            self.write_console("[ServiceRecorder] SermonAudio API Key is valid.")
 
     # Functions
     def recording(self):
@@ -330,5 +343,7 @@ class saRecorder(customtkinter.CTk):
 if __name__ == "__main__":
     sar = saRecorder()
     sar.validate_config()
+    if config()["FIRST_RUN"]:
+        sar.open_settings()
     sar.iconbitmap(config()["GUI_ICO"])
     sar.mainloop()
