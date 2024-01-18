@@ -26,7 +26,7 @@ console window, it *does* print enough information to inform you of what's happe
 If this doesn't deter you, proceed!
 
 ## Installation
-1. Install Python 3.12+, if you haven't already.  
+1. Install Python 3.12+, if you haven't already. I highly recommend installing using the installer from [Python's Website](https://www.python.org/downloads/), and NOT the Windows Store app.  
 1. This repo requires FFMPEG. Make sure to install it from a trusted source (I recommend taking a look at the [gyan page](https://www.gyan.dev/ffmpeg/builds/).
 There, you will find the easy ways to install FFMPEG like `winget` and even python's `pip` package manager,
 as well as the release builds for download.)
