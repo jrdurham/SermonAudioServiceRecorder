@@ -15,10 +15,11 @@ def message(saae, info):
 
 
 def check_broadcaster():
+    sa_api_key = str(config()["SA_API_KEY"])
     if "BROADCASTER_ID" in config() and len(str(config()["BROADCASTER_ID"])) > 0:
         broadcaster_id = str(config()["BROADCASTER_ID"])
         url = f"https://api.sermonaudio.com/v2/node/broadcasters/{broadcaster_id}?lite=true"
-        headers = {"accept": "application/json"}
+        headers = {"accept": "application/json", "X-Api-Key": f"{sa_api_key}"}
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             return True
@@ -65,6 +66,8 @@ def check_key():
 
 def get_series_titles():
     broadcaster_id = str(config()["BROADCASTER_ID"])
+    sa_api_key = str(config()["SA_API_KEY"])
+    sermonaudio.set_api_key(f"{sa_api_key}")
     page = 1
     titles = []
     if check_broadcaster():
@@ -84,6 +87,8 @@ def get_series_titles():
 
 def get_series_id(series_name):
     broadcaster_id = str(config()["BROADCASTER_ID"])
+    sa_api_key = str(config()["SA_API_KEY"])
+    sermonaudio.set_api_key(f"{sa_api_key}")
     page = 1
     while True:
         response = Node.get_series_list(
