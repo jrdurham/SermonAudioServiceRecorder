@@ -403,9 +403,9 @@ def event_type():
     if dateNow.weekday() == 6 and dateNow.hour < 11:
         event = "Sunday School"
     elif dateNow.weekday() == 6 and 11 <= dateNow.hour <= 14:
-        event = "Sunday AM"
+        event = "Sunday - AM"
     elif dateNow.weekday() == 6 and dateNow.hour >= 17:
-        event = "Sunday PM"
+        event = "Sunday - PM"
     elif dateNow.weekday() == 2 and dateNow.hour >= 17:
         event = "Midweek Service"
     else:
