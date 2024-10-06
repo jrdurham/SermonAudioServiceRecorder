@@ -62,10 +62,10 @@ By default, Service Recorder sets the event type automatically to one of three e
 based on when the recording is started. The logic works as follows:  
 <br>
 Event Type: `Sunday School`  
-Criteria: Recording started on Sunday *before* 1100.  
+Criteria: Recording started on Sunday *before* 1030.  
 <br>
 Event Type: `Sunday - AM` (Main Sunday morning service)  
-Criteria: Recording started on Sunday *after* 1100, but before 1400.  
+Criteria: Recording started on Sunday *at or after* 1030, but *before* 1400.  
 <br>
 Event Type: `Sunday PM`  
 Criteria: Recording started on Sunday *after* 1700  
