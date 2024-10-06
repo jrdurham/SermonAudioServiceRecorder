@@ -400,13 +400,16 @@ class RecorderGui(customtkinter.CTk):
 
 
 def event_type():
-    if dateNow.weekday() == 6 and dateNow.hour < 11:
-        event = "Sunday School"
-    elif dateNow.weekday() == 6 and 11 <= dateNow.hour <= 14:
-        event = "Sunday - AM"
-    elif dateNow.weekday() == 6 and dateNow.hour >= 17:
-        event = "Sunday - PM"
-    elif dateNow.weekday() == 2 and dateNow.hour >= 17:
+    if dateNow.weekday() == 6:  # Sunday
+        if dateNow.hour < 10 or (dateNow.hour == 10 and dateNow.minute < 30):
+            event = "Sunday School"
+        elif (dateNow.hour == 10 and dateNow.minute >= 30) or (dateNow.hour >= 11 and dateNow.hour < 14):
+            event = "Sunday - AM"
+        elif dateNow.hour >= 17:
+            event = "Sunday - PM"
+        else:
+            event = "Special Meeting"
+    elif dateNow.weekday() == 2 and dateNow.hour >= 17:  # Wednesday
         event = "Midweek Service"
     else:
         event = "Special Meeting"
