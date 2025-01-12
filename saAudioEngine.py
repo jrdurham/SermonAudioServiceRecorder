@@ -1,4 +1,5 @@
 import os
+import patch_subprocess
 import queue
 import sys
 import tempfile
@@ -158,7 +159,7 @@ class AudioHandler:
             corrected_file_name = (
                 f"{corrected_file_name}_{int(round(datetime.now().timestamp()))}"
             )
-        outfile = f"{audio_path}/{corrected_file_name}.mp3"
+        outfile = f"{audio_path}\{corrected_file_name}.mp3"
         self.outfile = outfile
         audio.export(
             f"{outfile}",
