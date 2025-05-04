@@ -112,7 +112,7 @@ def create_sermon(
     response = Broadcaster.create_or_update_sermon(
         full_title=full_title,
         speaker_name=speaker_name,
-        publish_timestamp=datetime.now() + timedelta(minutes=5),
+        publish_timestamp=datetime.now() + timedelta(minutes=15),
         preach_date=datetime.strptime(preach_date, "%Y%m%d"),
         event_type=models.SermonEventType(value=event_type),
         bible_text=bible_text,
