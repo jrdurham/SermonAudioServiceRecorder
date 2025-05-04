@@ -4,6 +4,7 @@ from threading import Thread
 
 import customtkinter
 from PIL import Image
+import pygit2
 
 import saAudioEngine as saAE
 import saapi
@@ -12,6 +13,12 @@ from sasrconfig import config
 
 customtkinter.set_appearance_mode("System")
 customtkinter.set_default_color_theme("blue")
+
+# Get repo metadata
+repo = pygit2.Repository('.')
+branch = repo.head.shorthand
+commit = str(repo.head.target)
+
 logoImg = customtkinter.CTkImage(
     light_image=None, dark_image=Image.open(config()["GUI_LOGO"]), size=(160, 35)
 )
@@ -295,6 +302,11 @@ class RecorderGui(customtkinter.CTk):
         self.console.configure(state="disabled")
 
     def validate_config(self):
+        # Print Version Info
+        self.write_console(
+            f"[ServiceRecorder] Branch: {branch}\n[ServiceRecorder] Commit Hash: {commit[:7]}"
+        )
+
         if "BROADCASTER_ID" not in config() or not len(config()["BROADCASTER_ID"]) > 0:
             self.write_console("[WARNING] SermonAudio Member ID is not set!")
             id_state = "no-id"
@@ -360,7 +372,7 @@ class RecorderGui(customtkinter.CTk):
         self.engine.is_recording = False
         self.engine.full_title = f"{self.sermonField.get()}"
         self.engine.speaker_name = f"{self.speakerField.get()}"
-        self.engine.bibleText = f"{self.refField.get()}"
+        self.engine.bible_text = f"{self.refField.get()}"
         self.engine.series = f"{self.seriesField.get()}"
         self.engine.preach_date = (
             self.manualDate.get() if str(self.deCheck.get()) == "off" else fullDateStamp
