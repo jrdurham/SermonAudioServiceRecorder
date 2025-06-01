@@ -369,7 +369,6 @@ class RecorderGui(customtkinter.CTk):
         )
         if str(self.deCheck.get()) == "off":
             self.file_name = f"{self.manualDate.get()}-{self.manualEvent.get()}"
-            self.manualEvent.set(f"{event_type()}")
         self.engine.sa_status = self.sa_status
         self.engine.file_name = f"{self.file_name}"
         self.engine.is_recording = False
