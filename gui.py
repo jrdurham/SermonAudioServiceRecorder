@@ -353,6 +353,8 @@ class RecorderGui(customtkinter.CTk):
     # Functions
     def recording(self):
         self.settings_gui_button.configure(state="disabled")
+        if str(self.deCheck.get()) == "on":
+            self.manualEvent.set(f"{event_type()}")
         self.write_console("[ServiceRecorder] Settings disabled while recording.")
         self.file_name = f"{fullDateStamp}-{self.manualEvent.get()}"
         self.engine.is_recording = True
@@ -391,6 +393,10 @@ class RecorderGui(customtkinter.CTk):
         self.engine.event_type = f"{self.manualEvent.get()}"
         if self.sa_upload.get() == 1:
             self.engine.sa_upload = f"{self.sa_upload.get()}"
+        self.sermonField.delete(0, "end")
+        self.speakerField.delete(0, "end")
+        self.refField.delete(0, "end")
+        self.seriesField.set("")
         self.settings_gui_button.configure(state="normal")
         self.running = False
         self.start_time = None
@@ -401,6 +407,7 @@ class RecorderGui(customtkinter.CTk):
         self.manualEvent.configure(
             state="normal" if str(self.deCheck.get()) == "off" else "disabled"
         )
+        self.manualEvent.set(f"{event_type()}")
         self.manualDate.configure(
             state="normal" if str(self.deCheck.get()) == "off" else "disabled"
         )
