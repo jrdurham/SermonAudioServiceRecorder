@@ -106,6 +106,11 @@ class SettingsGUI(customtkinter.CTkToplevel):
         else:
             pass
 
+        self.start_time = None
+        self.elapsed_updater = None
+        self.running = False
+
+
     def save_exit(self):
         self.save_args.update(
             {
@@ -230,6 +235,8 @@ class RecorderGui(customtkinter.CTk):
         self.api_status_label.grid(
             row=1, column=1, padx=(5, 20), pady=(0, 10), sticky="w", columnspan=2
         )
+        self.elapsed_label = customtkinter.CTkLabel(self.sidebarFrame, text="00:00:00:00", font=customtkinter.CTkFont(size=16))
+        self.elapsed_label.grid(row=8, column=0, columnspan=2, pady=(10, 0))
         self.settings_gui_button = customtkinter.CTkButton(
             self.sidebarFrame,
             text="Settings",
@@ -356,6 +363,10 @@ class RecorderGui(customtkinter.CTk):
             hover_color="#590000",
             command=self.not_recording,
         )
+        self.start_time = time.time()
+        self.running = True
+        self.elapsed_updater = Thread(target=self.update_elapsed_time, daemon=True)
+        self.elapsed_updater.start()
 
     def not_recording(self):
         self.console.focus()
@@ -381,6 +392,10 @@ class RecorderGui(customtkinter.CTk):
         if self.sa_upload.get() == 1:
             self.engine.sa_upload = f"{self.sa_upload.get()}"
         self.settings_gui_button.configure(state="normal")
+        self.running = False
+        self.start_time = None
+        self.elapsed_label.configure(text="00:00:00:00")
+
 
     def set_date_event(self):
         self.manualEvent.configure(
@@ -403,6 +418,17 @@ class RecorderGui(customtkinter.CTk):
 
     def update_series_field(self):
         self.seriesField.configure(values=saapi.get_series_titles(), state="normal")
+    
+    def update_elapsed_time(self):
+        while self.running:
+            if self.start_time:
+                elapsed = time.time() - self.start_time
+                hours, rem = divmod(int(elapsed), 3600)
+                minutes, seconds = divmod(rem, 60)
+                milliseconds = int((elapsed - int(elapsed)) * 100)
+                time_str = f"{hours:02}:{minutes:02}:{seconds:02}:{milliseconds:02}"
+                self.elapsed_label.configure(text=time_str)
+            time.sleep(0.05)
 
     def write_console(self, output):
         self.console.configure(state="normal")
