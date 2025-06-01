@@ -346,6 +346,8 @@ class RecorderGui(customtkinter.CTk):
     # Functions
     def recording(self):
         self.settings_gui_button.configure(state="disabled")
+        if str(self.deCheck.get()) == "on":
+            self.manualEvent.set(f"{event_type()}")
         self.write_console("[ServiceRecorder] Settings disabled while recording.")
         self.file_name = f"{fullDateStamp}-{self.manualEvent.get()}"
         self.engine.is_recording = True
