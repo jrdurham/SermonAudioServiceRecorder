@@ -355,6 +355,7 @@ class RecorderGui(customtkinter.CTk):
         self.settings_gui_button.configure(state="disabled")
         if str(self.deCheck.get()) == "on":
             self.manualEvent.set(f"{event_type()}")
+        self.elapsed_label.configure(text="00:00:00:00")
         self.write_console("[ServiceRecorder] Settings disabled while recording.")
         self.file_name = f"{fullDateStamp}-{self.manualEvent.get()}"
         self.engine.is_recording = True
@@ -400,8 +401,6 @@ class RecorderGui(customtkinter.CTk):
         self.settings_gui_button.configure(state="normal")
         self.running = False
         self.start_time = None
-        self.elapsed_label.configure(text="00:00:00:00")
-
 
     def set_date_event(self):
         self.manualEvent.configure(
