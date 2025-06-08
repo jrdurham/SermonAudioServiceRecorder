@@ -3,7 +3,7 @@ import patch_subprocess
 import queue
 import sys
 import tempfile
-from datetime import datetime
+from datetime import datetime,timezone
 from pathlib import Path
 
 import numpy as np
@@ -132,7 +132,10 @@ class AudioHandler:
 
     def save_audio(self):
         audio_path = config()["AUDIO_PATH"]
-        self.message("Recording stopped. Beginning file export.")
+        audio = AudioSegment.from_wav(f"{self.tmp_file}")
+        duration_ms = len(audio)
+        duration_str = datetime.fromtimestamp(duration_ms / 1000, tz=timezone.utc).strftime('%H:%M:%S')
+        self.message(f"Recording stopped. Length: {duration_str}. Beginning file export.")
         self.message("Validating destination path.")
         if not os.path.exists(f"{audio_path}"):
             self.message("Destination path does not exist...")
@@ -149,6 +152,7 @@ class AudioHandler:
             self.message("Destination path valid, saving audio file.")
 
         audio = AudioSegment.from_wav(f"{self.tmp_file}")
+        
         fade_in_duration = 5000  # in milliseconds
         fade_out_duration = 5000  # in milliseconds
         audio = audio.fade_in(fade_in_duration).fade_out(fade_out_duration)
