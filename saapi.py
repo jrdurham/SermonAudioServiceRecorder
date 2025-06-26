@@ -46,19 +46,21 @@ def check_key():
         except IndexError:
             return str("bad-id")
         url = f"https://api.sermonaudio.com/v2/node/sermons/{sermon_id}"
+        print(url)
 
         headers = {
-            "accept": "*/*",
+            "accept": "application/json",
             "X-API-Key": f"{sa_api_key}",
-            "Content-Type": "application/json",
         }
 
         response = requests.patch(url, headers=headers)
         if response.status_code == 422:
             return str("valid")
         elif response.status_code == 401 or 404:
+            print(f"{response.status_code}\n{headers} 1")
             return str("invalid")
         else:
+            print(f"{response.status_code}\n{headers} 2")
             return str("invalid")
     else:
         return "no-key"
