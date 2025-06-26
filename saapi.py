@@ -46,7 +46,6 @@ def check_key():
         except IndexError:
             return str("bad-id")
         url = f"https://api.sermonaudio.com/v2/node/sermons/{sermon_id}"
-        print(url)
 
         headers = {
             "accept": "application/json",
