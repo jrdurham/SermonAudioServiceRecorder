@@ -399,6 +399,7 @@ class RecorderGui(customtkinter.CTk):
         self.refField.delete(0, "end")
         self.seriesField.set("")
         self.settings_gui_button.configure(state="normal")
+        self.seriesField.selection_clear
         self.running = False
         self.start_time = None
 
