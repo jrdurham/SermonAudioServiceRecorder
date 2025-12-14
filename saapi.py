@@ -8,14 +8,25 @@ from sermonaudio.node.requests import Node
 
 from sasrconfig import config
 
+sa_api_key = str(config()["SA_API_KEY"])
+publish_delay_mins=15
 
 def message(saae, info):
     saae.sar.write_console(f"[API] {info}")
     print(f"[saAudioEngine] {info}")
 
+def add_sermon_to_series(saae, sermon_id, series_id):
+    url=f"https://api.sermonaudio.com/v2/node/sermons/{sermon_id}"
+    headers = {"accept": "application/json", "X-Api-Key": f"{sa_api_key}"}
+    data={"seriesID":series_id}
+    response = requests.patch(url, json=data, headers=headers)
+    if response.status_code == 204:
+        return True
+    else:
+        return False
+
 
 def check_broadcaster():
-    sa_api_key = str(config()["SA_API_KEY"])
     if "BROADCASTER_ID" in config() and len(str(config()["BROADCASTER_ID"])) > 0:
         broadcaster_id = str(config()["BROADCASTER_ID"])
         url = f"https://api.sermonaudio.com/v2/node/broadcasters/{broadcaster_id}?lite=true"
@@ -32,7 +43,6 @@ def check_broadcaster():
 def check_key():
     if "SA_API_KEY" in config() and len(str(config()["SA_API_KEY"])) == 36:
         broadcaster_id = str(config()["BROADCASTER_ID"])
-        sa_api_key = str(config()["SA_API_KEY"])
         try:
             sermon_id = (
                 Node.get_sermons(
@@ -67,7 +77,6 @@ def check_key():
 
 def get_series_titles():
     broadcaster_id = str(config()["BROADCASTER_ID"])
-    sa_api_key = str(config()["SA_API_KEY"])
     sermonaudio.set_api_key(f"{sa_api_key}")
     page = 1
     titles = []
@@ -88,7 +97,6 @@ def get_series_titles():
 
 def get_series_id(series_name):
     broadcaster_id = str(config()["BROADCASTER_ID"])
-    sa_api_key = str(config()["SA_API_KEY"])
     sermonaudio.set_api_key(f"{sa_api_key}")
     page = 1
     while True:
@@ -108,12 +116,11 @@ def create_sermon(
     saae, full_title, speaker_name, preach_date, event_type, bible_text, series=None
 ):
     broadcaster_id = str(config()["BROADCASTER_ID"])
-    sa_api_key = str(config()["SA_API_KEY"])
     sermonaudio.set_api_key(f"{sa_api_key}")
     response = Broadcaster.create_or_update_sermon(
         full_title=full_title,
         speaker_name=speaker_name,
-        publish_timestamp=datetime.now() + timedelta(minutes=15),
+        publish_timestamp=datetime.now() + timedelta(minutes=publish_delay_mins),
         preach_date=datetime.strptime(preach_date, "%Y%m%d"),
         event_type=models.SermonEventType(value=event_type),
         bible_text=bible_text,
@@ -129,14 +136,13 @@ def create_sermon(
         message(saae, f"Series supplied: {series}")
         series_id = get_series_id(f"{series}")
         if series_id:
-            message(saae, f'Series exists, adding {response.sermon_id} to "{series}".')
-            add_to_series = Broadcaster.move_sermon_to_series(
-                sermon_id=response.sermon_id, series_id=str(series_id)
-            )
+            message(saae, f'Series exists with id {series_id}, adding {response.sermon_id} to "{series}".')
+            add_to_series = add_sermon_to_series(saae, sermon_id=response.sermon_id, series_id=series_id)
             if add_to_series:
                 message(
                     saae, f'Sermon ID {response.sermon_id} added to series "{series}".'
                 )
+                message(saae, f'{response}')
             else:
                 message(
                     saae,
@@ -153,9 +159,7 @@ def create_sermon(
                     saae,
                     f'Series "{series}" Created, adding {response.sermon_id} to it.',
                 )
-                add_to_series = Broadcaster.move_sermon_to_series(
-                    sermon_id=response.sermon_id, series_id=series_id
-                )
+                add_to_series = add_sermon_to_series(saae, sermon_id=response.sermon_id, series_id=series_id)
                 if add_to_series:
                     message(
                         saae,
@@ -181,6 +185,5 @@ def create_sermon(
 
 
 def upload_audio(sermon_id, path):
-    sa_api_key = str(config()["SA_API_KEY"])
     sermonaudio.set_api_key(f"{sa_api_key}")
     Broadcaster.upload_audio(sermon_id=sermon_id, path=path)

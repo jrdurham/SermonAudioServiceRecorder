@@ -212,7 +212,7 @@ class AudioHandler:
                         f"\n\n"
                         f"  Public URL:\n"
                         f"  https://www.sermonaudio.com/sermoninfo.asp?SID={sermon_id}\n"
-                        "   NOTE: Public URL will not be live for another 5 minutes.\n"
+                        "   NOTE: Public URL will not be live for another 15 minutes.\n"
                     )
                 self.sar.update_series_field()
                 self.sar.seriesField.set(value=f"{self.series}")
